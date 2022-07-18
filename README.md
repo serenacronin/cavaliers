@@ -1,4 +1,4 @@
-## `CAVALIERS`: **C**ube **A**lgorithm for **V**ery **A**ccurate **L**ine **I**nvestigation of **E**mission of **R**adiant **S**uperwinds.
+## `CAVALIERS`: **C**ube **A**lgorithm for **V**ery **A**ccurate **L**ine **I**nvestigation of **E**mission in **R**adiant **S**uperwinds.
 
 Tools related to handling spectral cubes. Wrapper for the pyspeckit package (https://pyspeckit.readthedocs.io/en/latest/).
 
