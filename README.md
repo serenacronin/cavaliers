@@ -13,4 +13,6 @@ This is being tested and implemented on a project that analyzes MUSE data cubes 
   `scipy`
   `matplotlib`
   `tqdm`
+  `os`
+  `sys`
   
