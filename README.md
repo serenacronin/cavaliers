@@ -1,4 +1,4 @@
-## `CAVALIERS`: **C**ube **A**lgorithm for **V**ery **A**ccurate **L**ine **I**nvestigation of **E**mission in **R**adiant **S**uperwinds.
+## `CAVALIERS`: **C**ube **A**lgorithm for **V**ery **A**ccurate **L**ine **I**nvestigations of **E**mission in **R**adiant **S**uperwinds.
 
 A wrapper for the `pyspeckit` package (https://pyspeckit.readthedocs.io/en/latest/) that fits Gaussian models to emission lines of outflows in nearby galaxies. Note: within this wrapper are handy tools that deal with fitting data cubes that might be useful for other science cases.
 
