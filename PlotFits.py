@@ -24,12 +24,12 @@ from gauss_tools import one_gaussian, three_gaussian, red_chisq, chisq
 import scipy
 warnings.filterwarnings("ignore")
 
-def plot_one_fit(xpix, ypix, spec, redchisq, savepath, xmin, xmax, yresid, fluxnorm,
+def plot_one_fit(xpix, ypix, spec, redchisq, savepath, xmin, xmax, ymax, fluxnorm,
                  input_params, show_components=True):
     
     # set up the plotter
     # spec.plotter.refresh()
-    spec.plotter(xmin = xmin, xmax = xmax, ymin = yresid)    
+    spec.plotter(xmin = xmin, xmax = xmax, ymin = -0.4*ymax)    
     # spec.plotter.refresh()
     spec.measure(fluxnorm = fluxnorm)
     
@@ -63,7 +63,7 @@ def plot_one_fit(xpix, ypix, spec, redchisq, savepath, xmin, xmax, yresid, fluxn
     # plot the residuals
     spec.specfit.plotresiduals(axis=spec.plotter.axis,
                                 clear=False,
-                                yoffset=yresid+50, 
+                                yoffset=-0.2*ymax, 
                                 color='tab:purple',
                                 linewidth=1.5)
     
@@ -77,7 +77,7 @@ def plot_one_fit(xpix, ypix, spec, redchisq, savepath, xmin, xmax, yresid, fluxn
                         Line2D([0], [0], color='white', lw=2)]
 
         plt.legend(custom_lines,['Composite', 'Components', 'Residuals', 
-                                  'RedChiSq: %s' % round(redchisq,2)], fontsize=10, 
+                                  'RedChiSq: %s' % round(redchisq,2)], fontsize=7.5, 
                   loc='upper left')
     else:
         custom_lines = [Line2D([0], [0], color='tab:pink', lw=2),
@@ -85,53 +85,53 @@ def plot_one_fit(xpix, ypix, spec, redchisq, savepath, xmin, xmax, yresid, fluxn
                         Line2D([0], [0], color='white', lw=2)]
 
         plt.legend(custom_lines,['Fit', 'Residuals', 
-                                 'RedChiSq: %s' % round(redchisq,2)], fontsize=10, 
+                                 'RedChiSq: %s' % round(redchisq,2)], fontsize=7.5, 
                   loc='upper left')
 
 
-    plt.annotate('%s' % round(input_params[0],4), xy=(6685, 530), 
-                 annotation_clip=False, color='tab:green')
-    plt.annotate('%s' % round(input_params[1],4), xy=(6685, 490), 
-                 annotation_clip=False, color='tab:green')
-    plt.annotate('%s' % round(input_params[2],4), xy=(6685, 450), 
-                 annotation_clip=False, color='tab:green')
-    plt.annotate('%s' % round(input_params[3],4), xy=(6685, 410), 
-                 annotation_clip=False, color='tab:green')
-    plt.annotate('%s' % round(input_params[4],4), xy=(6685, 370), 
-                 annotation_clip=False, color='tab:green')
-    plt.annotate('%s' % round(input_params[5],4), xy=(6685, 330), 
-                 annotation_clip=False, color='tab:green')
-    plt.annotate('%s' % round(input_params[6],4), xy=(6685, 290), 
-                 annotation_clip=False, color='tab:green')
-    plt.annotate('%s' % round(input_params[7],4), xy=(6685, 250), 
-                 annotation_clip=False, color='tab:green')
-    plt.annotate('%s' % round(input_params[8],4), xy=(6685, 210), 
-                 annotation_clip=False, color='tab:green')
-    plt.annotate('%s' % round(input_params[9],4), xy=(6685, 170), 
-                 annotation_clip=False, color='tab:green')
-    plt.annotate('%s' % round(input_params[10],4), xy=(6685, 130),
-                 annotation_clip=False, color='tab:green')
-    plt.annotate('%s' % round(input_params[11],4), xy=(6685, 90), 
-                 annotation_clip=False, color='tab:green')
-    plt.annotate('%s' % round(input_params[12],4), xy=(6685, 50), 
-                 annotation_clip=False, color='tab:green')
-    plt.annotate('%s' % round(input_params[13],4), xy=(6685, 10), 
-                 annotation_clip=False, color='tab:green')
-    plt.annotate('%s' % round(input_params[14],4), xy=(6685, -30), 
-                 annotation_clip=False, color='tab:green')
-    plt.annotate('%s' % round(input_params[15],4), xy=(6685, -70), 
-                 annotation_clip=False, color='tab:green')
-    plt.annotate('%s' % round(input_params[16],4), xy=(6685, -110), 
-                 annotation_clip=False, color='tab:green')
-    plt.annotate('%s' % round(input_params[17],4), xy=(6685, -150), 
-                 annotation_clip=False, color='tab:green')
+    # plt.annotate('%s' % round(input_params[0],4), xy=(6685, 530), 
+    #              annotation_clip=False, color='tab:green')
+    # plt.annotate('%s' % round(input_params[1],4), xy=(6685, 490), 
+    #              annotation_clip=False, color='tab:green')
+    # plt.annotate('%s' % round(input_params[2],4), xy=(6685, 450), 
+    #              annotation_clip=False, color='tab:green')
+    # plt.annotate('%s' % round(input_params[3],4), xy=(6685, 410), 
+    #              annotation_clip=False, color='tab:green')
+    # plt.annotate('%s' % round(input_params[4],4), xy=(6685, 370), 
+    #              annotation_clip=False, color='tab:green')
+    # plt.annotate('%s' % round(input_params[5],4), xy=(6685, 330), 
+    #              annotation_clip=False, color='tab:green')
+    # plt.annotate('%s' % round(input_params[6],4), xy=(6685, 290), 
+    #              annotation_clip=False, color='tab:green')
+    # plt.annotate('%s' % round(input_params[7],4), xy=(6685, 250), 
+    #              annotation_clip=False, color='tab:green')
+    # plt.annotate('%s' % round(input_params[8],4), xy=(6685, 210), 
+    #              annotation_clip=False, color='tab:green')
+    # plt.annotate('%s' % round(input_params[9],4), xy=(6685, 170), 
+    #              annotation_clip=False, color='tab:green')
+    # plt.annotate('%s' % round(input_params[10],4), xy=(6685, 130),
+    #              annotation_clip=False, color='tab:green')
+    # plt.annotate('%s' % round(input_params[11],4), xy=(6685, 90), 
+    #              annotation_clip=False, color='tab:green')
+    # plt.annotate('%s' % round(input_params[12],4), xy=(6685, 50), 
+    #              annotation_clip=False, color='tab:green')
+    # plt.annotate('%s' % round(input_params[13],4), xy=(6685, 10), 
+    #              annotation_clip=False, color='tab:green')
+    # plt.annotate('%s' % round(input_params[14],4), xy=(6685, -30), 
+    #              annotation_clip=False, color='tab:green')
+    # plt.annotate('%s' % round(input_params[15],4), xy=(6685, -70), 
+    #              annotation_clip=False, color='tab:green')
+    # plt.annotate('%s' % round(input_params[16],4), xy=(6685, -110), 
+    #              annotation_clip=False, color='tab:green')
+    # plt.annotate('%s' % round(input_params[17],4), xy=(6685, -150), 
+    #              annotation_clip=False, color='tab:green')
 
         
     # make a title and legend
     plt.title('Pixel: %s,%s' % (xpix,ypix))
     
     # adjust the plot so that the annotation can be seen, then save to file
-    plt.subplots_adjust(right=0.57)
+    plt.subplots_adjust(right=0.65)
     plt.xlabel(r'Wavelength $(\AA)$')
     
     plt.savefig('%s/pixel_%s_%s.png' % (savepath, xpix, ypix), 
