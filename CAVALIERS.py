@@ -18,7 +18,7 @@ import pyspeckit
 from multiprocessing import Pool
 from functools import partial
 import regions
-from gauss_tools import one_gaussian, red_chisq
+# from gauss_tools import one_gaussian, red_chisq
 from PlotFits import plot_one_fit
 import os
 import scipy as sp
@@ -26,6 +26,11 @@ from reproject import reproject_interp
 from tqdm import tqdm
 import pickle
 
+def one_gaussian(x_array, amp1, cen1, sigma1):
+    return(amp1*(np.exp((-1.0/2.0)*(((x_array-cen1)/sigma1)**2))))
+
+def red_chisq(obs, calc, num_params, err, free_params):
+    return((np.sum((obs-calc)**2 / err**2))/(len(obs)-free_params))
 
 def CreateCube(filename, SlabLower, SlabUpper, ContLower1, ContUpper1,
 				ContLower2, ContUpper2, Region=False):
@@ -174,7 +179,7 @@ def InputParams(fit1, fit2, R, free_params, continuum_limits,
 	flagging failed fits by inputting another reduced chi square threshold value. 
 	This will save the fit attempt to a .png file to a savepath.
 
-	Note that the centers stem from a velocity model of the disk.
+	# Note that the centers stem from a velocity model of the disk.
 	
 	Parameters
 	-------------------
@@ -268,15 +273,15 @@ def InputParams(fit1, fit2, R, free_params, continuum_limits,
 		raise ValueError('''To compute the errors for a chi square, we need 
 						 lower and upper limits of good channels.''')
 
-	if (save_fits is True) and (savepath is False):
+	if (save_fits == True) and (savepath == False):
 		raise ValueError('''Please input a savepath for the 
 						 save fits flag.''')
 		
-	if (fit1 is True) and (fit2 is True) and (len(free_params) == 1):
+	if (fit1 == True) and (fit2 == True) and (len(free_params) == 1):
 		raise ValueError('''We need degrees of freedom for both fits!! 
 						 Please write as a list.''')
 		
-	if (random_pix_only is not False) and (type(random_pix_only) != int):
+	if (random_pix_only != False) and (type(random_pix_only) != int):
 		raise ValueError('Hmm...random_pix_only must be False or int.')
 
 	### calculation of the widths: ###
@@ -548,7 +553,8 @@ def FitRoutine(FittingInfo, chunk_list):
 	chunk_indices = chunk_list[2]  # indices of the chunk wrt the full cube
 	multiprocess = chunk_list[3]  # number of processes
 	
-	# make folders if needed
+# 	# make folders if needed
+	# print(os.access(savepath, os.W_OK))
 	if (save_fits != False) & (fit1 == True):
 		if not os.path.exists('%s/fits1/' % savepath):
 			os.makedirs('%s/fits1/' % savepath)
@@ -605,17 +611,6 @@ def FitRoutine(FittingInfo, chunk_list):
 	# a printout of the fitted spectrum. if we want to re-do the fits
 	# using one with more parameters, then do so and redo the above.
 	# this fit will save to a different cube.
-		
-	# FIXME: MOVE TO ANALYSIS
-	# # calculate the median amplitude of the cube; to be used later
-	# # then save as pkl file; if this file already exists
-	# # the just open it
-	# if not os.path.exists('%s/median_amp.pkl' % savepath):
-	# 	median_amp = calculate_median_amplitude(chunk, chunk_num, multiprocess)
-	# 	pickle.dump(median_amp, open('%s/median_amp.pkl' % savepath, 'wb'))
-	
-	# else:
-	# 	median_amp = pickle.load(open('%s/median_amp.pkl' % savepath, 'rb'))
 
 	# get the total number of parameters
 	# and number of degrees of freedom (i.e., free params)
@@ -756,14 +751,15 @@ def FitRoutine(FittingInfo, chunk_list):
 				
 				# save everything to the parameter cube!!!!
 				params1 = [par for sublist in zip(amps1_list, centers1_list, widths1_list)
-							for par in sublist] + redchisq1
+							for par in sublist]
+				params1.append(redchisq1)
 				parcube1[:,j,i] = params1
 				
 				# option to print out fits
 				if (save_fits != False) & (count % save_fits == 0):						
 						# print the fit
 						plot_one_fit(i, j, spec1, redchisq1, 
-									savepath = '%s/fits1/' % savepath, 
+									savepath = '%s/fits1' % savepath, 
 									xmin=6530, xmax=6620, 
 									ymax=max(spectrum), fluxnorm=1e-20,
 									input_params = total_guesses1)
@@ -854,13 +850,14 @@ def FitRoutine(FittingInfo, chunk_list):
 				params2 = [par for sublist in zip(amps2_list, centers2_list, widths2_list)
 							for par in sublist]
 				ordered_params2 = component_order_check(params2)
-				parcube2[:,j,i] = ordered_params2 + redchisq2 # tack redchisq on to end
+				ordered_params2 = np.append(ordered_params2,redchisq2)
+				parcube2[:,j,i] = ordered_params2 # tack redchisq on to end
 				
 				# option to print out fits
 				if (save_fits != False) & (count % save_fits == 0):						
 						# print the fit
 						plot_one_fit(i, j, spec2, redchisq2, 
-									savepath = '%s/fits2/' % savepath, 
+									savepath = '%s/fits2' % savepath, 
 									xmin=6530, xmax=6620,
 									ymax=max(spectrum), fluxnorm=1e-20,
 									input_params = total_guesses2)
@@ -871,51 +868,51 @@ def FitRoutine(FittingInfo, chunk_list):
 			## TODO: GENERALIZE FLUXNORM, XMIN, AND XMAX ABOVE
 
 
-		############################# 
-		## SAVE ONE COMPONENT FIT ###
-		############################# 
-		
-		if fit1 == True:
-			# make a silly little header
-			hdr1 = fits.Header()
-			hdr1['FITTYPE'] = 'gaussian'
-			parname = ['Amplitude', 'Center', 'Width'] * int(npars1 // 2 // 3)
-			jj = 0
-			for ii in range(len(parname)):
-				if ii % 3 == 0:
-					jj+=1
-				kw = "PLANE%i" % ii
-				hdr1[kw] = parname[ii] + str(jj)
-			hdul1 = fits.PrimaryHDU(data=parcube1, header=hdr1)
-				
-			try:
-				hdul1.writeto('%s/fit1_%s.fits' % (savepath, chunk_num), overwrite=True)
-			except:
-				hdul1.writeto('fit1_%s.fits' % chunk_num, overwrite=True)
+	############################# 
+	## SAVE ONE COMPONENT FIT ###
+	############################# 
+	
+	if fit1 == True:
+		# make a silly little header
+		hdr1 = fits.Header()
+		hdr1['FITTYPE'] = 'gaussian'
+		parname = ['Amplitude', 'Center', 'Width'] * int(npars1 // 2 // 3)
+		jj = 0
+		for ii in range(len(parname)):
+			if ii % 3 == 0:
+				jj+=1
+			kw = "PLANE%i" % ii
+			hdr1[kw] = parname[ii] + str(jj)
+		hdul1 = fits.PrimaryHDU(data=parcube1, header=hdr1)
+			
+		try:
+			hdul1.writeto('%s/fit1_%s.fits' % (savepath, chunk_num), overwrite=True)
+		except:
+			hdul1.writeto('fit1_%s.fits' % chunk_num, overwrite=True)
 
 
-		############################# 
-		## SAVE TWO COMPONENT FIT ###
-		############################# 
+	############################# 
+	## SAVE TWO COMPONENT FIT ###
+	############################# 
 
-		if fit2 == True:
+	if fit2 == True:
 
-			# make a silly little header
-			hdr2 = fits.Header()
-			hdr2['FITTYPE'] = 'gaussian'
-			parname = ['Amplitude', 'Center', 'Width'] * int(npars2 // 3)
-			jj = 0
-			for ii in range(len(parname)):
-				if ii % 3 == 0:
-					jj+=1
-				kw = "PLANE%i" % ii
-				hdr2[kw] = parname[ii] + str(jj)
-			hdul2 = fits.PrimaryHDU(data=parcube2, header=hdr2)
-				
-			try:
-				hdul2.writeto('%s/fit2_%s.fits' % (savepath, chunk_num), overwrite=True)
-			except:
-				hdul2.writeto('fit2_%s.fits' % chunk_num, overwrite=True)
+		# make a silly little header
+		hdr2 = fits.Header()
+		hdr2['FITTYPE'] = 'gaussian'
+		parname = ['Amplitude', 'Center', 'Width'] * int(npars2 // 3)
+		jj = 0
+		for ii in range(len(parname)):
+			if ii % 3 == 0:
+				jj+=1
+			kw = "PLANE%i" % ii
+			hdr2[kw] = parname[ii] + str(jj)
+		hdul2 = fits.PrimaryHDU(data=parcube2, header=hdr2)
+			
+		try:
+			hdul2.writeto('%s/fit2_%s.fits' % (savepath, chunk_num), overwrite=True)
+		except:
+			hdul2.writeto('fit2_%s.fits' % chunk_num, overwrite=True)
 
 	return
 
@@ -959,4 +956,3 @@ def RunFit(cube, fitparams, multiprocess=1):
 								chunk_list))
 			
 	return
-
