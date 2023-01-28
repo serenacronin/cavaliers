@@ -91,7 +91,7 @@ Region = False
 
 Vsys = 243.  # Koribalski+04
 c = 3*10**5  # km/s
-restwl = 6564.61*(Vsys + c)/c  # Halpha restwl shifted by Vsys of the disk
+restwl = 6564.614*(Vsys + c)/c  # Halpha restwl shifted by Vsys of the disk
 convention = 'optical'  # velocity convention
 
 # set our peak range; this is a tad arbitrary

@@ -9,12 +9,10 @@ This script....
 """
 
 # Import CubeFitRoutine and extra packages.
-from CAVALIERS import CreateCube, InputParams, FitRoutine, RunFit, ModelGuesses, optical_vel_to_ang
-import numpy as np
+from CAVALIERS import CreateCube, InputParams, RunFit, optical_vel_to_ang
 import time
 from astropy.io import fits
 import warnings
-from tqdm import tqdm
 startTime = time.time()  # TIME THE SCRIPT
 warnings.filterwarnings("ignore")
 
@@ -26,48 +24,53 @@ c = 3*10**5  # km/s
 z = Vsys / c
 
 # file names
-filename = '../ngc253/data/ADP.2018-11-22T21_29_46.157.fits'
-wls_model = '../ngc253/data/ngc253_se_halpha_vel_model_smooth_FINAL.fits'
+# filename = '../ngc253/data/ADP.2018-11-22T21_29_46.157.fits'
+# wls_model = '../ngc253/data/ngc253_se_halpha_vel_model_smooth_FINAL.fits'
+filename = '../ADP.2018-11-22T21_29_46.157.fits'
+wls_model = '../ngc253_se_halpha_vel_model_smooth_FINAL.fits'
 
-# info for continuums
+# info for continuum
 SlabLower = 6500
-SlabUpper = 6650
-ContUpper1 = 6600
-ContLower1 = 6545
+SlabUpper = 6800
+ContUpper1 = 6620
+ContLower1 = 6525
 ContUpper2 = 6750
 ContLower2 = 6700
 
-# air rest wavelengths
-NIIa = 6549.86 # *(1+z)
-Halpha = 6564.61
+# vacuum rest wavelengths
+NIIa = 6549.86
+Halpha = 6564.614
 NIIb = 6585.27
-# SIIa = 6716.44
-# SIIb = 6730.82
+SIIa = 6718.29
+SIIb = 6732.68
 Voutfl = 50 # an initial guess
 
 # wavelength guesses
-restwls = [NIIa, Halpha, NIIb]
+restwls = [NIIa, Halpha, NIIb, SIIa, SIIb]
 modelcube = fits.open(wls_model)
 modelcubedat = modelcube[0].data
 vels = modelcubedat
 wls_disk = [optical_vel_to_ang(vels, restwl) for restwl in restwls]
 
 # tie the center wavelengths to Halpha
-tie1 = wls_disk[1] - wls_disk[0]
-tie2 = wls_disk[2] - wls_disk[1]
+tie_niia = Halpha - NIIa
+tie_niib = NIIb - Halpha
+tie_siia = SIIa - Halpha
+tie_siib = SIIb - Halpha
 
 # the amp ratio for NII is 3:1; so NIIb = 3*NIIa
-amp_tie = 3 
+amp_tie = 3
 
-# upper limit for the chi-square values 
-free_params = [4, 10]
+# parameters we are allowing to float (i.e., not tied)
+free_params = [6, 12]
 
 ## buttons to toggle ##
 Region = False
 fit1 = True
 fit2 = True
-rand_pix_num = 300
-savepath = '../ngc253/testJan22'
+# rand_pix_num = 1000
+rand_pix_num = False
+savepath = 'testJan27/'
 multiprocess = 1
 save_fits_num = 1
 
@@ -76,40 +79,42 @@ save_fits_num = 1
 
 ############################# 
 ##### ONE COMPONENT FIT #####
-############################# 
+#############################
+
 if fit1 == True:
 
     # amplitude + wavelength guesses
-    amps1 = [100, 300, 300]  # 3:1 ratio for NII
-    wls1 = [wls_disk[0], wls_disk[1], wls_disk[2]]
+    amps1 = [100, 300, 300, 100, 120]  # 3:1 ratio for NII
+    wls1 = [wls_disk[0], wls_disk[1], wls_disk[2], wls_disk[3], wls_disk[4]]
 
     # tying amps, wavelengths, widths
-    ties1_per_pix = [[['', 'p[4] - %f' % tie1[j,i], 'p[5]',
-                        '', '', '',
-                        '%f*p[0]' % amp_tie, 'p[4] + %f' % tie2[j,i], 'p[5]'] 
-                        for i in range(tie1.shape[1])] 
-                        for j in range(tie1.shape[0])]
+    ties1_per_pix = ['', 'p[4] - %f' % tie_niia, 'p[5]',
+                    '', '', '',
+                    '%f*p[0]' % amp_tie, 'p[4] + %f' % tie_niib, 'p[5]',
+                    '', 'p[4] + %f' % tie_siia, 'p[5]',
+                    '', 'p[4] + %f' % tie_siib, 'p[5]']
 
 ############################# 
 ##### TWO COMPONENT FIT #####
 #############################
 
 if fit2 == True:
+
     # amplitude + wavelength guesses
-    amps2 = [100, 100, 300, 300, 300, 300]
+    amps2 = [100, 100, 300, 300, 300, 300, 100, 100, 150, 150]
     wls2 = [NIIa*(Voutfl + c)/c, wls_disk[0],
             Halpha*(Voutfl + c)/c, wls_disk[1], 
-            NIIb*(Voutfl + c)/c, wls_disk[2]]
+            NIIb*(Voutfl + c)/c, wls_disk[2],
+            SIIa*(Voutfl + c)/c, wls_disk[3],
+            SIIb*(Voutfl + c)/c, wls_disk[4]]
 
     # tying amps, wavelengths, widths
-    ties2_per_pix = [[['', 'p[7] - %f' % tie1[j,i], 'p[8]', '', 'p[10] - %f' % tie1[j,i], 'p[11]',
+    ties2_per_pix = ['', 'p[7] - %f' % tie_niia, 'p[8]', '', 'p[10] - %f' % tie_niia, 'p[11]',
                         '', '', '', '', '', '',
-                        '%f*p[0]' % amp_tie, 'p[7] + %f' % tie2[j,i], 'p[8]', '%f*p[3]' % amp_tie, 'p[10] + %f' % tie2[j,i], 'p[11]'] 
-                    for i in range(tie1.shape[1])]
-                    for j in range(tie1.shape[0])]
+                        '%f*p[0]' % amp_tie, 'p[7] + %f' % tie_niib, 'p[8]', '%f*p[3]' % amp_tie, 'p[10] + %f' % tie_niib, 'p[11]',
+                        '', 'p[7] + %f' % tie_siia, 'p[8]', '', 'p[10] + %f' % tie_siia, 'p[11]',
+                        '', 'p[7] + %f' % tie_siib, 'p[8]', '', 'p[10] + %f' % tie_siib, 'p[11]']
 
-# # starting point for the fits
-# point_start = (0,0)
 
 ### --- CALL FUNCTIONS --- ####
 
@@ -135,7 +140,7 @@ if __name__ == '__main__':
     RunFit(cube=cube, fitparams=FittingInfo, multiprocess=multiprocess)
     
     # TIME THE SCRIPT #
-    outfile = open(Time_CubeFitRoutine.txt', 'w')
+    outfile = open('%sTime_CubeFitRoutine.txt', 'w' % savepath)
     executionTime = (time.time() - startTime)
     print('Execution time in seconds: ' + str(executionTime), file=outfile)
     outfile.close()

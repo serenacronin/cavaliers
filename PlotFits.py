@@ -29,7 +29,8 @@ def plot_one_fit(xpix, ypix, spec, redchisq, savepath, xmin, xmax, ymax, fluxnor
     
     # set up the plotter
     # spec.plotter.refresh()
-    spec.plotter(xmin = xmin, xmax = xmax, ymin = -0.4*ymax)    
+    spec.plotter(xmin = xmin, xmax = xmax, ymin = -0.4*ymax) 
+    plt.rcParams["figure.figsize"] = (10,5)   
     # spec.plotter.refresh()
     spec.measure(fluxnorm = fluxnorm)
     
@@ -54,9 +55,9 @@ def plot_one_fit(xpix, ypix, spec, redchisq, savepath, xmin, xmax, ymax, fluxnor
                           lw=1.5)
     
     # get the fit information to the side of the plot
-    spec.specfit.annotate(loc='upper right', labelspacing=0.25, markerscale=0.01, 
+    spec.specfit.annotate(loc='upper right', labelspacing=0.15, markerscale=0.01, 
                           borderpad=0.1, handlelength=0.1, handletextpad=0.1, 
-                          fontsize=10, bbox_to_anchor=(1.7,1))
+                          fontsize=8, bbox_to_anchor=(1.4,1))
     
     # spec.plotter.refresh()
     
@@ -67,6 +68,14 @@ def plot_one_fit(xpix, ypix, spec, redchisq, savepath, xmin, xmax, ymax, fluxnor
                                 color='tab:purple',
                                 linewidth=1.5)
     
+    # resids_line = [spec.specfit.residuals[6525:6620], spec.specfit.residuals[6700:6750]]
+    # resids_linefree = [spec.specfit.residuals[0:6525], spec.specfit.residuals[6620:6700], 
+    #                                                                 spec.specfit.residuals[6750:]]
+
+    # resids_line = np.std(np.array(spec.specfit.residuals[6525:6620], spec.specfit.residuals[6700:6750]))
+    # resids_linefree = np.std(np.array(spec.specfit.residuals[0:6525], spec.specfit.residuals[6620:6700], 
+    #                                                                 spec.specfit.residuals[6750:]))
+    
     # plot the components individually if applicable
     if show_components is True:
         spec.specfit.plot_components(component_fit_color='tab:cyan',
@@ -74,17 +83,22 @@ def plot_one_fit(xpix, ypix, spec, redchisq, savepath, xmin, xmax, ymax, fluxnor
         custom_lines = [Line2D([0], [0], color='tab:pink', lw=2),
                         Line2D([0], [0], color='tab:cyan', lw=2),
                         Line2D([0], [0], color='tab:purple', lw=2),
+                        # Line2D([0], [0], color='white', lw=2),
+                        # Line2D([0], [0], color='white', lw=2),
                         Line2D([0], [0], color='white', lw=2)]
 
-        plt.legend(custom_lines,['Composite', 'Components', 'Residuals', 
-                                  'RedChiSq: %s' % round(redchisq,2)], fontsize=7.5, 
-                  loc='upper left')
+        plt.legend(custom_lines,['Composite', 'Components', 'Residuals',
+                                # 'Resid. stdev (line-free): %s' % round(resids_linefree,2),
+                                # 'Resid. stdev (line): %s' % round(resids_line,2),
+                                'RedChiSq: %s' % round(redchisq,2)], fontsize=7.5, 
+                                loc='upper left')
     else:
         custom_lines = [Line2D([0], [0], color='tab:pink', lw=2),
                         Line2D([0], [0], color='tab:purple', lw=2),
+                        # Line2D([0], [0], color='white', lw=2),
                         Line2D([0], [0], color='white', lw=2)]
 
-        plt.legend(custom_lines,['Fit', 'Residuals', 
+        plt.legend(custom_lines,['Fit', 'Residuals',
                                  'RedChiSq: %s' % round(redchisq,2)], fontsize=7.5, 
                   loc='upper left')
 
@@ -125,13 +139,12 @@ def plot_one_fit(xpix, ypix, spec, redchisq, savepath, xmin, xmax, ymax, fluxnor
     #              annotation_clip=False, color='tab:green')
     # plt.annotate('%s' % round(input_params[17],4), xy=(6685, -150), 
     #              annotation_clip=False, color='tab:green')
-
         
     # make a title and legend
     plt.title('Pixel: %s,%s' % (xpix,ypix))
     
     # adjust the plot so that the annotation can be seen, then save to file
-    plt.subplots_adjust(right=0.65)
+    plt.subplots_adjust(right=0.75)
     plt.xlabel(r'Wavelength $(\AA)$')
     
     plt.savefig('%s/pixel_%s_%s.png' % (savepath, xpix, ypix), 

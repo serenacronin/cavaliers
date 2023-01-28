@@ -18,7 +18,6 @@ import pyspeckit
 from multiprocessing import Pool
 from functools import partial
 import regions
-# from gauss_tools import one_gaussian, red_chisq
 from PlotFits import plot_one_fit
 import os
 import scipy as sp
@@ -73,7 +72,7 @@ def CreateCube(filename, SlabLower, SlabUpper, ContLower1, ContUpper1,
 	fullcube = SpectralCube.read(filename, hdu=1).spectral_slab(SlabLower * u.AA, 
 																SlabUpper * u.AA)
 
-	if Region is not False:
+	if Region != False:
 		# slice into a smaller cube
 		region = regions.Regions.read(Region)
 		subcube = fullcube.subcube_from_regions(region)
@@ -314,6 +313,8 @@ def InputParams(fit1, fit2, R, free_params, continuum_limits,
 				for item in sublist]
 		limited1 = [(True, False), (True, False), (True, True),
 					(True, False), (True, False), (True, True),
+					(True, False), (True, False), (True, True),
+					(True, False), (True, False), (True, True),
 					(True, False), (True, False), (True, True)]
 		
 	# do we want a fit where there are two Gaussian components?
@@ -334,6 +335,10 @@ def InputParams(fit1, fit2, R, free_params, continuum_limits,
 					widths2_lims) for item in sublist]
 		
 		limited2 = [(True, False), (True, False), (True, True),
+					(True, False), (True, False), (True, True),
+					(True, False), (True, False), (True, True),
+					(True, False), (True, False), (True, True),
+					(True, False), (True, False), (True, True),
 					(True, False), (True, False), (True, True),
 					(True, False), (True, False), (True, True),
 					(True, False), (True, False), (True, True),
@@ -573,16 +578,16 @@ def FitRoutine(FittingInfo, chunk_list):
 		
 		# TODO: generalize 0:438
 		guesses1 = [guesses1[q][chunk_indices[0]:chunk_indices[1], 0:438]
-					  if type(guesses1[q]) is np.ndarray 
+					  if type(guesses1[q]) == np.ndarray 
 					  else guesses1[q] 
 					  for q in range(len(guesses1))]
 
 		limits1 = [limits1[q][chunk_indices[0]:chunk_indices[1], 0:438] 
-					  if type(limits1[q]) is np.ndarray 
+					  if type(limits1[q]) == np.ndarray 
 					  else limits1[q] 
 					  for q in range(len(limits1))]
 		ties1 = [ties1[q][chunk_indices[0]:chunk_indices[1], 0:438] 
-					  if type(ties1[q]) is np.ndarray 
+					  if type(ties1[q]) == np.ndarray 
 					  else ties1[q] 
 					  for q in range(len(ties1))]
 	
@@ -649,15 +654,13 @@ def FitRoutine(FittingInfo, chunk_list):
 			# skip if the pixel is nan
 			check_nan = np.array(chunk[:,randy,randx], dtype='float64')
 			if np.isfinite(np.mean(check_nan)) == False:
-				# if chunk_num == 3 or multiprocess == 1: pbar.update(1)
-				# count+=1
 				continue
 			
 			# change that to a 1
 			mask[randy,randx] = 1
 			randcount = randcount+1
 		
-		print('Random pixels chosen!\n')
+		print('%s random pixels chosen!\n' % randcount)
 		
 	### --- LET THE FITTING COMMENCE --- ###
 
@@ -673,6 +676,7 @@ def FitRoutine(FittingInfo, chunk_list):
 			# option for only working with a random set of pixels
 			if random_pix_only != False: 
 				if mask[j,i] == 0:
+					if chunk_num == 2 or multiprocess == 1: pbar.update(1)  
 					continue
 				else:
 					spectrum = np.array(chunk[:,j,i], dtype='float64')
@@ -681,7 +685,7 @@ def FitRoutine(FittingInfo, chunk_list):
 						
 			# if we land on a nan pixel, skip
 			if np.isfinite(np.mean(spectrum)) == False:
-				if chunk_num == 2: pbar.update(1)
+				if chunk_num == 2 or multiprocess == 1: pbar.update(1)  
 				count+=1
 				continue
 
@@ -698,14 +702,19 @@ def FitRoutine(FittingInfo, chunk_list):
 				# grab the spectrum
 				spec1 = pyspeckit.Spectrum(data=spectrum, xarr=x_axis)
 
+				#FIXME: test of baseline subtraction
+				spec1.baseline(xmin=6500, xmax=6800, 
+		   						exclude=[6545, 6600, 6700, 6750],
+		    					subtract=True, order=3)
+
 				# grab specific pixel value from the array
 				total_guesses1 = [guesses1[q][j,i] 
-									if type(guesses1[q]) is np.ndarray 
+									if type(guesses1[q]) == np.ndarray 
 									else guesses1[q]
 									for q in range(len(guesses1))]
 				
 				total_limits1 = [(limits1[q][0][j,i], limits1[q][1][j,i]) 
-								if type(limits1[q][0]) is np.ndarray 
+								if type(limits1[q][0]) == np.ndarray 
 								else limits1[q] 
 								for q in range(len(limits1))]
 
@@ -714,17 +723,18 @@ def FitRoutine(FittingInfo, chunk_list):
 					if chunk_num == 2 or multiprocess == 1: pbar.update(1)
 					count+=1
 					continue
-				elif 'nan' in ties1[j][i][1]:
-					if chunk_num == 2 or multiprocess == 1: pbar.update(1)
-					count+=1
-					continue
+				# elif 'nan' in ties1[j][i][1]:
+				# 	if chunk_num == 2 or multiprocess == 1: pbar.update(1)
+				# 	count+=1
+				# 	continue
 					
 				# perform the fit!
 				spec1.specfit.multifit(fittype='gaussian',
 										guesses = total_guesses1, 
 										limits = total_limits1,
 										limited = limited1,
-										tied = ties1[j][i],
+										# tied = ties1[j][i],
+										tied = ties1,
 										annotate = False)
 				spec1.measure(fluxnorm = 1e-20) # TODO: GENERALIZE FLUXNORM
 				
@@ -760,7 +770,7 @@ def FitRoutine(FittingInfo, chunk_list):
 						# print the fit
 						plot_one_fit(i, j, spec1, redchisq1, 
 									savepath = '%s/fits1' % savepath, 
-									xmin=6530, xmax=6620, 
+									xmin=6500, xmax=6800, 
 									ymax=max(spectrum), fluxnorm=1e-20,
 									input_params = total_guesses1)
 
@@ -777,26 +787,26 @@ def FitRoutine(FittingInfo, chunk_list):
 				# working with the correct chunk of guesses
 				if multiprocess != 1:
 					guesses2 = [guesses2[q][chunk_indices[0]:chunk_indices[1], 0:438] 
-									if type(guesses2[q]) is np.ndarray 
+									if type(guesses2[q]) == np.ndarray 
 									else guesses2[q] 
 									for q in range(len(guesses2))]
 					limits2 = [limits2[q][chunk_indices[0]:chunk_indices[1], 0:438] 
-									if type(limits2[q]) is np.ndarray 
+									if type(limits2[q]) == np.ndarray 
 									else limits2[q] 
 									for q in range(len(limits2))]
 					ties2 = [ties2[q][chunk_indices[0]:chunk_indices[1], 0:438] 
-									if type(ties2[q]) is np.ndarray 
+									if type(ties2[q]) == np.ndarray 
 									else ties2[q] 
 									for q in range(len(ties2))]
 				
 				# grab specific pixel value from the array
 				total_guesses2 = [guesses2[q][j,i] 
-									if type(guesses2[q]) is np.ndarray 
+									if type(guesses2[q]) == np.ndarray 
 									else guesses2[q] 
 									for q in range(len(guesses2))]
 				
 				total_limits2 =  [(limits2[q][0][j,i], limits2[q][1][j,i]) 
-										if type(limits2[q][0]) is np.ndarray 
+										if type(limits2[q][0]) == np.ndarray 
 										else limits2[q] 
 										for q in range(len(limits2))]
 				
@@ -805,21 +815,25 @@ def FitRoutine(FittingInfo, chunk_list):
 					if chunk_num == 2 or multiprocess == 1: pbar.update(1)
 					count+=1
 					continue
-				elif 'nan' in ties2[j][i][1]:
-					if chunk_num == 2 or multiprocess == 1: pbar.update(1)
-					count+=1
-					continue
+				# elif 'nan' in ties2[j][i][1]:
+				# 	if chunk_num == 2 or multiprocess == 1: pbar.update(1)
+				# 	count+=1
+				# 	continue
 
 				# grab the spectrum
 				spec2 = pyspeckit.Spectrum(data=spectrum, xarr=np.linspace(minval, maxval, 
 											len(spectrum)))
+				spec2.baseline(xmin=6500, xmax=6800, 
+		   						exclude=[6545, 6600, 6700, 6750],
+		    					subtract=True, order=3)
 
 				# perform the fit
 				spec2.specfit.multifit(fittype='gaussian',
 										guesses = total_guesses2, 
 										limits = total_limits2,
 										limited = limited2,
-										tied = ties2[j][i],
+										# tied = ties2[j][i],
+										tied = ties2,
 										annotate = False)
 				spec2.measure(fluxnorm = 1e-20) # TODO: generalize
 				
@@ -858,7 +872,7 @@ def FitRoutine(FittingInfo, chunk_list):
 						# print the fit
 						plot_one_fit(i, j, spec2, redchisq2, 
 									savepath = '%s/fits2' % savepath, 
-									xmin=6530, xmax=6620,
+									xmin=6500, xmax=6800,
 									ymax=max(spectrum), fluxnorm=1e-20,
 									input_params = total_guesses2)
 				
