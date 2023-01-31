@@ -437,7 +437,6 @@ def component_order_check(params):
 		new_params[3], new_params[4], new_params[5] = a_comp1, v_comp1, s_comp1
 		new_params[0], new_params[1], new_params[2] = a_comp2, v_comp2, s_comp2
 		
-		
 		# second emission line
 		a_comp1 = params[6]
 		v_comp1 = params[7]
@@ -459,8 +458,32 @@ def component_order_check(params):
 		v_comp2 = params[16]
 		s_comp2 = params[17]
 		
-		new_params[12], new_params[13], new_params[14] = a_comp1, v_comp1, s_comp1
-		new_params[15], new_params[16], new_params[17] = a_comp2, v_comp2, s_comp2
+		new_params[15], new_params[16], new_params[17] = a_comp1, v_comp1, s_comp1
+		new_params[12], new_params[13], new_params[14] = a_comp2, v_comp2, s_comp2
+
+		# fourth emission line
+		a_comp1 = params[18]
+		v_comp1 = params[19]
+		s_comp1 = params[20]
+		
+		a_comp2 = params[21]
+		v_comp2 = params[22]
+		s_comp2 = params[23]
+		
+		new_params[21], new_params[22], new_params[23] = a_comp2, v_comp2, s_comp2
+		new_params[18], new_params[19], new_params[20] = a_comp1, v_comp1, s_comp1
+
+		# fifth emission line
+		a_comp1 = params[24]
+		v_comp1 = params[25]
+		s_comp1 = params[26]
+		
+		a_comp2 = params[27]
+		v_comp2 = params[28]
+		s_comp2 = params[29]
+		
+		new_params[27], new_params[28], new_params[29] = a_comp2, v_comp2, s_comp2
+		new_params[24], new_params[25], new_params[26] = a_comp1, v_comp1, s_comp1
 		
 	return new_params
 
@@ -849,7 +872,7 @@ def FitRoutine(FittingInfo, chunk_list):
 					amps2_list.append(spec2.measurements.lines[line]['amp']/(1e-20))
 					centers2_list.append(spec2.measurements.lines[line]['pos'])
 					widths2_list.append(spec2.measurements.lines[line]['fwhm']/2.355)
-					
+
 				# calculate reduced chi-square; first add up each Gaussian
 				components2 = [one_gaussian(np.array(chunk.spectral_axis), 
 								amps2_list[i], centers2_list[i], widths2_list[i]) 

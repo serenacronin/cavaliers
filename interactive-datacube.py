@@ -117,7 +117,7 @@ def onpick(event):
                   params[14], params[15], 
                   params[16], params[17])
     
-    # re-create the individual component H-alpha gaussians using the par info
+    # re-create the individual component NIIb gaussians using the par info
     NIIb_comp1 = one_gaussian(x_data, 
                   params[12], params[13], 
                   params[14])
@@ -126,7 +126,21 @@ def onpick(event):
                   params[15], params[16], 
                   params[17])
     
+    # re-create the composite NIIb gaussian using the parameter info
+    SIIa_tot = two_gaussian(x_data, 
+                  params[12], params[13], 
+                  params[14], params[15], 
+                  params[16], params[17])
     
+    # re-create the individual component H-alpha gaussians using the par info
+    NIIb_comp1 = one_gaussian(x_data, 
+                  params[12], params[13], 
+                  params[14])
+    
+    NIIb_comp2 = one_gaussian(x_data, 
+                  params[15], params[16], 
+                  params[17])
+
     # make the plot!
     fig, ax = plt.subplots()
     

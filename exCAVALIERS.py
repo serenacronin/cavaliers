@@ -70,7 +70,8 @@ fit1 = True
 fit2 = True
 # rand_pix_num = 1000
 rand_pix_num = False
-savepath = 'testJan27/'
+# savepath = '../ngc253/testJan30/'
+savepath = 'testJan30/'
 multiprocess = 1
 save_fits_num = 1
 
@@ -140,7 +141,8 @@ if __name__ == '__main__':
     RunFit(cube=cube, fitparams=FittingInfo, multiprocess=multiprocess)
     
     # TIME THE SCRIPT #
-    outfile = open('%sTime_CubeFitRoutine.txt', 'w' % savepath)
+    outfile = open('%sTime_CubeFitRoutine.txt'% savepath, 'w')
     executionTime = (time.time() - startTime)
+    print('Execution time in seconds: ' + str(executionTime))
     print('Execution time in seconds: ' + str(executionTime), file=outfile)
     outfile.close()
