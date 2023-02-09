@@ -57,7 +57,7 @@ def plot_one_fit(xpix, ypix, spec, redchisq, savepath, xmin, xmax, ymax, fluxnor
     # get the fit information to the side of the plot
     spec.specfit.annotate(loc='upper right', labelspacing=0.15, markerscale=0.01, 
                           borderpad=0.1, handlelength=0.1, handletextpad=0.1, 
-                          fontsize=8, bbox_to_anchor=(1.4,1))
+                          fontsize=6, bbox_to_anchor=(1.3,1.1))
     
     # spec.plotter.refresh()
     
@@ -77,7 +77,7 @@ def plot_one_fit(xpix, ypix, spec, redchisq, savepath, xmin, xmax, ymax, fluxnor
     #                                                                 spec.specfit.residuals[6750:]))
     
     # plot the components individually if applicable
-    if show_components is True:
+    if show_components == True:
         spec.specfit.plot_components(component_fit_color='tab:cyan',
                                     lw=1.5)
         custom_lines = [Line2D([0], [0], color='tab:pink', lw=2),
@@ -264,10 +264,10 @@ def plot_fits(cube, FittingInfo, xmin, xmax, yresid, fluxnorm,
     
             # Make axes labels
             ## THIS NEEDS TO BE CLEANED UP AND GENERALIZED
-            if xlabel is 'wavelength_A':
+            if xlabel == 'wavelength_A':
                 spec.plotter.axis.set_xlabel(r'Wavelength $(\AA)$')
                 
-            if ylabel is 'flux':
+            if ylabel == 'flux':
                 spec.plotter.axis.set_ylabel(r'Flux $(10^{-20} \mathrm{erg/s/cm^2/\AA})$')
                 
             spec.plotter.refresh()

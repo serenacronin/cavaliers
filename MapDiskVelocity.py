@@ -25,7 +25,9 @@ custom functions used throughout this script.
 
 ### ---- MY FUNCTIONS ---- ###
 # https://github.com/serenacronin/SerAstroTools
-from CubeFitRoutine import CreateCube
+import sys
+sys.path.append('../astro_tools')
+from CAVALIERS import CreateCube
 from fit_parabola import *
 from velocity_conversions import *
 from convolution import gauss_2d_kernel
@@ -71,12 +73,12 @@ def secax_fxn_inverse(xvals):
     return c*((xvals/restwl)-1)
 
 # variables
-filename = 'data/ADP.2018-11-22T21_29_46.157.fits'
-savepath = 'MapDiskVelocity/'
+filename = '../ngc253/data/ADP.2018-11-22T21_29_46.157.fits'
+savepath = '../ngc253/testFeb8/'
 outfile_dirty = 'ngc253_se_halpha_vel_model_dirty.fits'  # map before cleaning
 outfile_method = 'ngc253_se_halpha_vel_model_method.png'  # how the map was cleaned
 outfile_smooth = 'ngc253_se_halpha_vel_model_smooth.fits'  # map after cleaning
-modelfile = 'data/NGC253_NKrieger_model.fits'  # (optional) model for comparison
+modelfile = '../ngc253/data/NGC253_NKrieger_model.fits'  # (optional) model for comparison
 model_name = 'Krieger+19'  # (optional) model for comparison
 
 SlabLower = 6500  # focus just on peak (in this case, Halpha)
@@ -91,7 +93,7 @@ Region = False
 
 Vsys = 243.  # Koribalski+04
 c = 3*10**5  # km/s
-restwl = 6564.614*(Vsys + c)/c  # Halpha restwl shifted by Vsys of the disk
+restwl = 6562.801*(Vsys + c)/c  # Halpha air restwl shifted by Vsys of the disk
 convention = 'optical'  # velocity convention
 
 # set our peak range; this is a tad arbitrary
@@ -103,7 +105,6 @@ beampix = 4.445  # pixels; one pixel = 0.2arcsec (see ESO archive);
                  # only needed if stamp_out_pix = True
 mask_kern = 20*beam  # sigma for 2D Gaussian kernel to do the masking
 fill_kern = 40*beam  # sigma for 2D Gaussian kernel to fill in masked values
-
 
 run_parabolas = False  # trigger parabola fits
 print_every_other = True  # print every other parabola fit
@@ -196,8 +197,8 @@ if run_parabolas == True:
                     plt.plot(np.linspace(xL, xR, 100), parab, color='tab:cyan', label='Parabola',zorder=0)
                     plt.scatter([xL, xmax, xR], [yL, ymax, yR], color='tab:pink', label='Points',zorder=10)
                     plt.scatter(h, k, color='tab:purple', label='Vertex (%s km/s)' % (round(vel,2)),zorder=10)
-                    plt.xlabel(r'Wavelength $(\AA)$', fontsize=14)
-                    plt.ylabel(r'Flux $(10^{-20} \mathrm{erg/s/cm^2/\AA})$', fontsize=14)
+                    plt.xlabel(r'Wavelength $\mathtt{(\AA)}$', fontsize=14)
+                    plt.ylabel(r'Flux $(10^{-20} \mathtt{erg/s/cm^2/\AA})$', fontsize=14)
                     
                     # add a secondary axes to show velocity
                     secax = ax.secondary_xaxis('top', functions=(secax_fxn_inverse, secax_fxn))
@@ -226,8 +227,8 @@ if run_parabolas == True:
                 plt.plot(np.linspace(xL, xR, 100), parab, color='tab:cyan', label='Parabola',zorder=0)
                 plt.scatter([xL, xmax, xR], [yL, ymax, yR], color='tab:pink', label='Points',zorder=10)
                 plt.scatter(h, k, color='tab:purple', label='Vertex (%s km/s)' % (round(vel,2)),zorder=10)
-                plt.xlabel(r'Wavelength $(\AA)$', fontsize=14)
-                plt.ylabel(r'Flux $(10^{-20} \mathrm{erg/s/cm^2/\AA})$', fontsize=14)
+                plt.xlabel(r'Wavelength $\mathtt{(\AA)}$', fontsize=14)
+                plt.ylabel(r'Flux $(10^{-20} \mathtt{erg/s/cm^2/\AA})$', fontsize=14)
                 
                 # add a secondary axes to show velocity
                 secax = ax.secondary_xaxis('top', functions=(secax_fxn_inverse, secax_fxn))
@@ -262,18 +263,25 @@ if run_parabolas == True:
 ### --- PROCESS THE HALPHA VELOCITY MAP --- ###
 if clean_map == True:
     
-    # Region = 'data/ha_map_wrong_vels.reg'
     hdu0 = fits.open(filename)[1]
     og_data = hdu0.data  # original data
     hdu = fits.open(savepath+outfile_dirty)[0]
     og_peak_map = hdu.data[1] # my Halpha map
+
+    cube_open = fits.open(filename)[1]
+    cube = cube_open.data
+    hdr = cube_open.header
+    w = wcs.WCS(hdr)
+    # w = wcs.WCS(hdu0.header,naxis=2).celestial
     
     fig = plt.figure(figsize=(15,10))
     plt.rcParams["axes.edgecolor"] = "black"
     plt.rcParams["axes.linewidth"] = 2.5
-    plt.rcParams["font.family"] = "serif"
-    plt.rcParams["font.variant"] = "small-caps"
-    
+    plt.rcParams["font.family"] = "courier new"
+    # plt.rcParams["font.family"] = "sans-serif"
+    plt.rcParams["font.style"] = "normal"
+    plt.rcParams["font.weight"] = 'heavy'
+
     # build the kernel
     kern_arr = gauss_2d_kernel(sigma=mask_kern)
     
@@ -282,13 +290,13 @@ if clean_map == True:
     new_image = convolve(og_peak_map, kern_arr, normalize_kernel=False, 
                          nan_treatment='fill')
     
-    ax = plt.subplot(2, 3, 1)
+    ax = plt.subplot(2, 3, 1, projection=w[0])
     ax.imshow(og_peak_map, vmin=-160, vmax=160, origin='lower', cmap='RdBu_r')
     ax.set_title('Original', fontsize=20)
     ax.tick_params(axis='both', which='both',direction='in',
                    width=2.5, labelsize=16, length=7)
-    ax.set_xlabel('x (pixels)', fontsize=20)
-    ax.set_ylabel('y (pixels)', fontsize=20)
+    ax.set_ylabel('Dec. [deg.]', fontsize=20, weight='heavy')
+    ax.coords[0].set_auto_axislabel(False)
     
     # set a threshold: we want to find pixels that deviate by +/- 100
     # blank out these pixels; this is our mask!
@@ -296,11 +304,14 @@ if clean_map == True:
     copy_im = og_peak_map.copy()
     copy_im[~mask] = np.nan
     
-    ax = plt.subplot(2, 3, 2)
+    ax = plt.subplot(2, 3, 2, projection=w[0])
     im = ax.imshow(mask, origin='lower', cmap='Greys_r')
-    ax.set_title('Mask ($\sigma = $ %s)' % round(mask_kern,4), fontsize=20)
-    ax.tick_params(axis='both', which='both',direction='in', top=True, right=True,
+    ax.set_title('Mask ($\mathtt{\sigma = }$ %s)' % round(mask_kern,4), fontsize=20)
+    ax.tick_params(axis='both', which='both',direction='in',
                    width=2.5, labelsize=16, length=7)
+    ax.coords[0].set_auto_axislabel(False)
+    ax.coords[1].set_auto_axislabel(False)
+    ax.coords[1].set_ticklabel_visible(False)
     
     # add an annotation
     at = AnchoredText(
@@ -308,11 +319,14 @@ if clean_map == True:
     at.patch.set_boxstyle("round,pad=0.,rounding_size=0.2")
     ax.add_artist(at)
     
-    ax = plt.subplot(2, 3, 3)
+    ax = plt.subplot(2, 3, 3, projection=w[0])
     ax.imshow(copy_im, vmin=-160, vmax=160, origin='lower', cmap='RdBu_r')
     ax.set_title('Applied Mask',fontsize=20)
-    ax.tick_params(axis='both', which='both',direction='in', top=True, right=True,
+    ax.tick_params(axis='both', which='both',direction='in',
                    width=2, labelsize=16, length=7)
+    ax.coords[0].set_auto_axislabel(False)
+    ax.coords[1].set_auto_axislabel(False)
+    ax.coords[1].set_ticklabel_visible(False)
     
     # okay, now we have islands of nans...but some still have bad pixels within
     # them! we can go ham at blanking out these pixels by using a box kernel
@@ -327,11 +341,13 @@ if clean_map == True:
         # original image to keep the original resolution
         copy_im[np.isnan(new_image2)] = np.nan
         
-        ax = plt.subplot(2, 3, 4)
+        ax = plt.subplot(2, 3, 4, projection=w[0])
         ax.imshow(copy_im, vmin=106, vmax=371, origin='lower', cmap='RdBu_r')
         ax.set_title('Box Kernel (w=%s)' % boxkern, fontsize=20)
-        ax.tick_params(axis='both', which='both',direction='in', top=True, right=True,
+        ax.tick_params(axis='both', which='both',direction='in',
                        width=2, labelsize=16, length=7)
+        ax.set_xlabel('R.A. [deg.]', fontsize=20)
+        ax.set_ylabel('Dec. [deg.]', fontsize=20)
         
     # now we want to fill in these nan pixels with the average
     # of the nearest neighbors
@@ -339,11 +355,13 @@ if clean_map == True:
     final_image = convolve(copy_im, kernel)
     
     if stamp_out_pix == False:
-        ax = plt.subplot(2, 3, 4)
+        ax = plt.subplot(2, 3, 4, projection=w[0])
         ax.imshow(final_image, vmin=-160, vmax=160, origin='lower',cmap='RdBu_r')
-        ax.set_title('Smoothed Image ($\sigma = $ %s)' % round(fill_kern,4),fontsize=20)
-        ax.tick_params(axis='both', which='both',direction='in', top=True, right=True,
+        ax.set_title('Smoothed Image ($\mathtt{\sigma = }$ %s)' % round(fill_kern,4),fontsize=20)
+        ax.tick_params(axis='both', which='both',direction='in',
                         width=2.5, labelsize=16, length=7)
+        ax.set_xlabel('R.A. [deg.]', fontsize=20)
+        ax.set_ylabel('Dec. [deg.]', fontsize=20)
         
         # add an annotation
         at = AnchoredText(
@@ -351,39 +369,44 @@ if clean_map == True:
         at.patch.set_boxstyle("round,pad=0.,rounding_size=0.2")
         ax.add_artist(at)
         
-        ax = plt.subplot(2, 3, 5) # set up next subplot
+        ax = plt.subplot(2, 3, 5, projection=w[0]) # set up next subplot
     
     else:
-        ax = plt.subplot(2, 3, 4) # set up next subplot
+        ax = plt.subplot(2, 3, 4, projection=w[0]) # set up next subplot
+        ax.set_xlabel('R.A. [deg.]', fontsize=20)
+        ax.set_ylabel('Dec. [deg.]', fontsize=20)
         
     # aaaand lets blank back out those new edges
     ## FIXME: might want og_data[0] instead of og_data[1]
     final_image[np.isnan(og_data[1])] = np.nan # [0] has some nans within
     ax.imshow(final_image, vmin=-160, vmax=160, origin='lower',cmap='RdBu_r')
     ax.set_title('Final Image',fontsize=20)
-    ax.tick_params(axis='both', which='both',direction='in', top=True, right=True,
+    ax.tick_params(axis='both', which='both',direction='in',
                     width=2.5, labelsize=16, length=7)
+    ax.set_xlabel('R.A. [deg.]', fontsize=20)
+    ax.coords[1].set_auto_axislabel(False)
+    ax.coords[1].set_ticklabel_visible(False)
     
     # let's add a model to compare
     if add_comparison_model == True:
         hdu_model = fits.open(modelfile)[0]
         model_map = (hdu_model.data) - Vsys # subtract the systemic velocity
         
-        ax = plt.subplot(2, 3, 6)
+        ax = plt.subplot(2, 3, 6, projection=w[0])
         im = ax.imshow(model_map, vmin=-160, vmax=160, origin='lower',cmap='RdBu_r')
         ax.set_title('%s' % model_name,fontsize=20)
         bar = plt.colorbar(im, fraction=0.046)
         bar.set_label('Velocity (km/s)', fontsize=18)
         bar.ax.tick_params(width=2.5, labelsize=16, length=7, direction='in')
-        ax.tick_params(axis='both', which='both',direction='in', top=True, right=True,
+        ax.tick_params(axis='both', which='both',direction='in',
                        width=2.5, labelsize=16, length=7)
+        ax.set_xlabel('R.A. [deg.]', fontsize=20)
+        ax.coords[1].set_auto_axislabel(False)
+        ax.coords[1].set_ticklabel_visible(False)
     
-    
-    plt.tight_layout()
     plt.savefig('%s%s' % (savepath, outfile_method), dpi=200)
     
     # save the final, smoothed image as a fits file
-    w = wcs.WCS(hdu.header,naxis=2).celestial
     hdr = w.to_header()
     hdr['FITTYPE'] = 'parabola'
     hdr['PLANE0'] = 'WAVELENGTH'
@@ -395,4 +418,3 @@ if clean_map == True:
     
     hdul = fits.PrimaryHDU(data=final_image, header=hdr)
     hdul.writeto('%s%s' % (savepath, outfile_smooth), overwrite=True)
-    
