@@ -23,13 +23,16 @@ import os
 import scipy as sp
 from reproject import reproject_interp
 from tqdm import tqdm
-import pickle
 
 def one_gaussian(x_array, amp1, cen1, sigma1):
     return(amp1*(np.exp((-1.0/2.0)*(((x_array-cen1)/sigma1)**2))))
 
+
+
 def red_chisq(obs, calc, num_params, err, free_params):
     return((np.sum((obs-calc)**2 / err**2))/(len(obs)-free_params))
+
+
 
 def CreateCube(filename, SlabLower, SlabUpper, ContLower1, ContUpper1,
 				ContLower2, ContUpper2, Region=False):
@@ -119,6 +122,23 @@ def optical_vel_to_ang(vels, restwl):
 	wls = restwl*(vels + c)/c
 	
 	return wls
+
+def slice_from_string(slice_string):
+    
+	"""
+	This function will take in a string and convert it so that
+	it can be used to slice numpy arrays.
+
+	Adopted from: 
+	https://stackoverflow.com/questions/48494581/converting-an-input-string-to-a-numpy-slice
+	"""
+
+	slices = slice_string.split(',')
+	if len(slices) > 1:
+		sl = [slice_from_string(s.strip()) for s in slices]
+	else:
+		sl = slice(*[int(x) for x in slice_string.split(':')])
+	return sl
 	
 
 def ModelGuesses(mycube, modelcube, restwl):
@@ -151,8 +171,6 @@ def ModelGuesses(mycube, modelcube, restwl):
 	newmodelcube = fits.PrimaryHDU(data=modelcube[0].data,header=new_header)
 
 	vels, footprint = reproject_interp(modelcube, mynewcube.header)
-	# fits.writeto('testing_reproject_subregion.fits', vels, 
-	#                     mynewcube.header, overwrite=True)
 
 	wls = optical_vel_to_ang(vels, restwl)
 	
@@ -160,10 +178,12 @@ def ModelGuesses(mycube, modelcube, restwl):
 
 
 
-def InputParams(fit1, fit2, R, free_params, continuum_limits,
+def InputParams(fit1, fit2, fit3, R, free_params, continuum_limits,
 				amps1=False, centers1=False, ties1=False, 
 				amps2=False, centers2=False, ties2=False,
-				random_pix_only=False, save_fits=False, savepath=False):
+				amps3=False, centers3=False, ties3=False,
+				redchisq_range=False, random_pix_only=False, 
+				save_fits=False, savepath=False):
 	
 	"""
 	This function will compile your input parameters for a Gaussian fit
@@ -188,6 +208,9 @@ def InputParams(fit1, fit2, R, free_params, continuum_limits,
 
 	fit2 : bool
 		Toggle True if you want to fit with two Gaussians.
+
+	fit3 : bool
+		Toggle True if you want to fit with three Gaussians.
 
 	R : int or float
 		Resolving power of the instrument.
@@ -231,6 +254,19 @@ def InputParams(fit1, fit2, R, free_params, continuum_limits,
 
 	ties2 : list of strings; default=False
 		See ties_1.
+
+	amps3 : list of ints or floats; default=False
+		Input guesses for the triple-Gaussian amplitudes.
+	
+	centers3 : string; default=False
+		Center wavelength guesses for the triple-Gaussian fit.
+
+	ties3 : list of strings; default=False
+		See ties_1.
+
+	redchisq_range : False or string; default=False
+		Option to focus on a range of the spectrum for the reduced
+		chi square calculation.
 		
 	random_pix_only : False or int; default=False
 		Number of random pixels you want to work with.
@@ -250,14 +286,20 @@ def InputParams(fit1, fit2, R, free_params, continuum_limits,
 		raise ValueError('fit1 must be True or False.')
 	if fit2 != False and fit2 != True:
 		raise ValueError('fit2 must be True or False.')
+	if fit3 != False and fit3 != True:
+		raise ValueError('fit3 must be True or False.')
 	if fit1 == True and ((amps1 or centers1 or ties1) == False):
-		raise ValueError('If fit1 is True, need amps_1, centers_1, and ties_1.')
+		raise ValueError('If fit1 is True, need amps1, centers1, and ties1.')
 	if fit2 == True and ((amps2 or centers2 or ties2) == False):
-		raise ValueError('If fit2 is True, need amps_2, centers_2, and ties_2.')
+		raise ValueError('If fit2 is True, need amps2, centers2, and ties2.')
+	if fit3 == True and ((amps3 or centers3 or ties3) == False):
+		raise ValueError('If fit3 is True, need amps3, centers3, and ties3.')
 
 	if fit1 == True and free_params == False:
 		raise ValueError('Need the degrees of freedom of the fits.')
 	if fit2 == True and free_params == False:
+		raise ValueError('Need the degrees of freedom of the fits.')
+	if fit3 == True and free_params == False:
 		raise ValueError('Need the degrees of freedom of the fits.')
 	if save_fits == True and free_params == False:
 		raise ValueError('Need the degrees of freedom of the fits.')
@@ -271,13 +313,25 @@ def InputParams(fit1, fit2, R, free_params, continuum_limits,
 	elif (fit2 == True) and (continuum_limits == False):
 		raise ValueError('''To compute the errors for a chi square, we need 
 						 lower and upper limits of good channels.''')
+	elif (fit3 == True) and (continuum_limits == False):
+		raise ValueError('''To compute the errors for a chi square, we need 
+						 lower and upper limits of good channels.''')
 
 	if (save_fits == True) and (savepath == False):
 		raise ValueError('''Please input a savepath for the 
 						 save fits flag.''')
 		
-	if (fit1 == True) and (fit2 == True) and (len(free_params) == 1):
-		raise ValueError('''We need degrees of freedom for both fits!! 
+	if (fit1 == True) and (fit2 == True) and (fit3 == False) and (len(free_params) != 2):
+		raise ValueError('''We need degrees of freedom for two fits!! 
+						 Please write as a list.''')
+	if (fit2 == True) and (fit2 == False) and (fit3 == True) and (len(free_params) != 2):
+		raise ValueError('''We need degrees of freedom for two fits!! 
+						 Please write as a list.''')
+	if (fit1 == False) and (fit2 == True) and (fit3 == True) and (len(free_params) != 2):
+		raise ValueError('''We need degrees of freedom for two fits!! 
+						 Please write as a list.''')
+	if (fit1 == True) and (fit2 == True) and (fit3 == True) and (len(free_params) != 3):
+		raise ValueError('''We need degrees of freedom for three fits!! 
 						 Please write as a list.''')
 		
 	if (random_pix_only != False) and (type(random_pix_only) != int):
@@ -307,8 +361,7 @@ def InputParams(fit1, fit2, R, free_params, continuum_limits,
 		amps1_lims = [(0, 0)] * len(amps1)
 		centers1_lims = [(0, 0)] * len(centers1)
 		widths1_lims = [(widths1_lower_lim, widths1_upper_lim)] * len(amps1)
-		# sigma_lims = [item for item in 
-		#               zip(list(sigmas_lower_lim), list(sigmas_upper_lim))]
+		
 		limits1 = [item for sublist in zip(amps1_lims, centers1_lims, widths1_lims)
 				for item in sublist]
 		limited1 = [(True, False), (True, False), (True, True),
@@ -344,12 +397,46 @@ def InputParams(fit1, fit2, R, free_params, continuum_limits,
 					(True, False), (True, False), (True, True),
 					(True, False), (True, False), (True, True),
 					(True, False), (True, False), (True, True)]
+		
+	# option of 3 Gaussian fits
+	# same idea as fit2 == True above
+	if fit3 == True:
+		
+		# given the nature of this calculation, we can use the same
+		# widths1_guess and upper and lower limits as above!
+		guesses3 = [item for sublist in zip(amps3, centers3, 
+					[widths1_guess]*len(amps3)) for item in sublist]
+
+		amps3_lims = [(0, 0)] * len(amps3)
+		centers3_lims = [(0, 0)] * len(centers3)
+		widths3_lims = [(widths1_lower_lim, widths1_upper_lim)] * len(amps3)
+		
+		limits3 = [item for sublist in zip(amps3_lims, centers3_lims, 
+					widths3_lims) for item in sublist]
+		
+		limited3 = [(True, False), (True, False), (True, True),
+					(True, False), (True, False), (True, True),
+					(True, False), (True, False), (True, True),
+					(True, False), (True, False), (True, True),
+					(True, False), (True, False), (True, True),
+					(True, False), (True, False), (True, True),
+					(True, False), (True, False), (True, True),
+					(True, False), (True, False), (True, True),
+					(True, False), (True, False), (True, True),
+					(True, False), (True, False), (True, True),
+					(True, False), (True, False), (True, True),
+					(True, False), (True, False), (True, True),
+					(True, False), (True, False), (True, True),
+					(True, False), (True, False), (True, True),
+					(True, False), (True, False), (True, True)]
 
 	# return everything we need!
-	return([fit1, fit2, free_params, continuum_limits, 
+	return([fit1, fit2, fit3, free_params, continuum_limits, 
 			guesses1, limits1, limited1, ties1,
 			guesses2, limits2, limited2, ties2,
-			random_pix_only, save_fits, savepath])
+			guesses3, limits3, limited3, ties3,
+			redchisq_range, random_pix_only, 
+			save_fits, savepath])
 
 def compute_rms(x_axis, spectrum, ContLower, ContUpper):
 	
@@ -372,45 +459,47 @@ def compute_rms(x_axis, spectrum, ContLower, ContUpper):
 	return rms
 
 
-def calculate_median_amplitude(cube, chunk_num, multiprocess):
+# def calculate_median_amplitude(cube, chunk_num, multiprocess):
 	
-	"""
-	Loop over the entire cube and calculate the median
-	amplitude. This will be used in our reduced chi-square 
-	calculation, where higher S/N pixels will have different
-	reduced chi-square thresholds.
+# 	"""
+# 	Loop over the entire cube and calculate the median
+# 	amplitude. This will be used in our reduced chi-square 
+# 	calculation, where higher S/N pixels will have different
+# 	reduced chi-square thresholds.
 	
-	"""
+# 	"""
 	
-	z,y,x = cube.shape
-	amps = []
+# 	z,y,x = cube.shape
+# 	amps = []
 	
-	if chunk_num == 2 or multiprocess == 1:
-		print('Reminder that progress bar is an estimate. It only updates for one chunk!')
-		for j in tqdm(np.arange(y), 
-					  desc='Calculating median amp. of brightest lines per pixel...',
-					  unit='pixel'): # y-axis
-			for i in np.arange(x): # x-axis
+# 	if chunk_num == 2 or multiprocess == 1:
+# 		print('Reminder that progress bar is an estimate. It only updates for one chunk!')
+# 		for j in tqdm(np.arange(y), 
+# 					  desc='Calculating median amp. of brightest lines per pixel...',
+# 					  unit='pixel'): # y-axis
+# 			for i in np.arange(x): # x-axis
 		
-				# get the spectrum and the x-axis
-				spectrum = np.array(cube[:,j,i], dtype='float64')
-				amps.append(max(spectrum))
+# 				# get the spectrum and the x-axis
+# 				spectrum = np.array(cube[:,j,i], dtype='float64')
+# 				amps.append(max(spectrum))
 				
-	else:
-		for j in np.arange(y): # y-axis
-			for i in np.arange(x): # x-axis
+# 	else:
+# 		for j in np.arange(y): # y-axis
+# 			for i in np.arange(x): # x-axis
 		
-				# get the spectrum and the x-axis
-				spectrum = np.array(cube[:,j,i], dtype='float64')
-				amps.append(max(spectrum))
+# 				# get the spectrum and the x-axis
+# 				spectrum = np.array(cube[:,j,i], dtype='float64')
+# 				amps.append(max(spectrum))
 			
-	# take the median of the non-nan pixels
-	amps_arr = np.array(amps)
-	amps_arr = amps_arr[np.isfinite(amps_arr)]
-	return np.median(amps_arr)
+# 	# take the median of the non-nan pixels
+# 	amps_arr = np.array(amps)
+# 	amps_arr = amps_arr[np.isfinite(amps_arr)]
+# 	return np.median(amps_arr)
+
+## the above can be replaced by just taking the median of the cube
 
 
-def component_order_check(params):
+def component_order_check(params, fit2 = False, fit3 = False):
 	
 	
 	"""
@@ -422,69 +511,136 @@ def component_order_check(params):
 	
 	"""
 	
-	new_params = np.zeros(len(params))
-	if (params[4] < params[1]) | (params[10] < params[7]) | (params[16] < params[13]):
-		
-		# first emission line
-		a_comp1 = params[0]
-		v_comp1 = params[1]
-		s_comp1 = params[2]
-		
-		a_comp2 = params[3]
-		v_comp2 = params[4]
-		s_comp2 = params[5]
-		
-		new_params[3], new_params[4], new_params[5] = a_comp1, v_comp1, s_comp1
-		new_params[0], new_params[1], new_params[2] = a_comp2, v_comp2, s_comp2
-		
-		# second emission line
-		a_comp1 = params[6]
-		v_comp1 = params[7]
-		s_comp1 = params[8]
-		
-		a_comp2 = params[9]
-		v_comp2 = params[10]
-		s_comp2 = params[11]
-		
-		new_params[9], new_params[10], new_params[11] = a_comp1, v_comp1, s_comp1
-		new_params[6], new_params[7], new_params[8] = a_comp2, v_comp2, s_comp2
-		
-		# third emission line
-		a_comp1 = params[12]
-		v_comp1 = params[13]
-		s_comp1 = params[14]
-		
-		a_comp2 = params[15]
-		v_comp2 = params[16]
-		s_comp2 = params[17]
-		
-		new_params[15], new_params[16], new_params[17] = a_comp1, v_comp1, s_comp1
-		new_params[12], new_params[13], new_params[14] = a_comp2, v_comp2, s_comp2
+	# re-order components for 2 Gaussians
+	if fit2 == True:
+		new_params = np.zeros(len(params))
+		if (params[4] < params[1]) | (params[10] < params[7]) | (params[16] < params[13]):
+			
+			# first emission line
+			a_comp1 = params[0]
+			v_comp1 = params[1]
+			s_comp1 = params[2]
+			
+			a_comp2 = params[3]
+			v_comp2 = params[4]
+			s_comp2 = params[5]
+			
+			new_params[3], new_params[4], new_params[5] = a_comp1, v_comp1, s_comp1
+			new_params[0], new_params[1], new_params[2] = a_comp2, v_comp2, s_comp2
+			
+			# second emission line
+			a_comp1 = params[6]
+			v_comp1 = params[7]
+			s_comp1 = params[8]
+			
+			a_comp2 = params[9]
+			v_comp2 = params[10]
+			s_comp2 = params[11]
+			
+			new_params[9], new_params[10], new_params[11] = a_comp1, v_comp1, s_comp1
+			new_params[6], new_params[7], new_params[8] = a_comp2, v_comp2, s_comp2
+			
+			# third emission line
+			a_comp1 = params[12]
+			v_comp1 = params[13]
+			s_comp1 = params[14]
+			
+			a_comp2 = params[15]
+			v_comp2 = params[16]
+			s_comp2 = params[17]
+			
+			new_params[15], new_params[16], new_params[17] = a_comp1, v_comp1, s_comp1
+			new_params[12], new_params[13], new_params[14] = a_comp2, v_comp2, s_comp2
 
-		# fourth emission line
-		a_comp1 = params[18]
-		v_comp1 = params[19]
-		s_comp1 = params[20]
-		
-		a_comp2 = params[21]
-		v_comp2 = params[22]
-		s_comp2 = params[23]
-		
-		new_params[21], new_params[22], new_params[23] = a_comp2, v_comp2, s_comp2
-		new_params[18], new_params[19], new_params[20] = a_comp1, v_comp1, s_comp1
+			# fourth emission line
+			a_comp1 = params[18]
+			v_comp1 = params[19]
+			s_comp1 = params[20]
+			
+			a_comp2 = params[21]
+			v_comp2 = params[22]
+			s_comp2 = params[23]
+			
+			new_params[21], new_params[22], new_params[23] = a_comp2, v_comp2, s_comp2
+			new_params[18], new_params[19], new_params[20] = a_comp1, v_comp1, s_comp1
 
-		# fifth emission line
-		a_comp1 = params[24]
-		v_comp1 = params[25]
-		s_comp1 = params[26]
-		
-		a_comp2 = params[27]
-		v_comp2 = params[28]
-		s_comp2 = params[29]
-		
-		new_params[27], new_params[28], new_params[29] = a_comp2, v_comp2, s_comp2
-		new_params[24], new_params[25], new_params[26] = a_comp1, v_comp1, s_comp1
-		
+			# fifth emission line
+			a_comp1 = params[24]
+			v_comp1 = params[25]
+			s_comp1 = params[26]
+			
+			a_comp2 = params[27]
+			v_comp2 = params[28]
+			s_comp2 = params[29]
+			
+			new_params[27], new_params[28], new_params[29] = a_comp2, v_comp2, s_comp2
+			new_params[24], new_params[25], new_params[26] = a_comp1, v_comp1, s_comp1
+
+		# re-order components for 3 Gaussians
+		if fit3 == True:
+			new_params = np.zeros(len(params))
+			if (params[4] < params[1]) | (params[10] < params[7]) | (params[16] < params[13]):
+			
+				# first emission line
+				a_comp1 = params[0]
+				v_comp1 = params[1]
+				s_comp1 = params[2]
+				
+				a_comp2 = params[3]
+				v_comp2 = params[4]
+				s_comp2 = params[5]
+				
+				new_params[3], new_params[4], new_params[5] = a_comp1, v_comp1, s_comp1
+				new_params[0], new_params[1], new_params[2] = a_comp2, v_comp2, s_comp2
+				
+				# second emission line
+				a_comp1 = params[6]
+				v_comp1 = params[7]
+				s_comp1 = params[8]
+				
+				a_comp2 = params[9]
+				v_comp2 = params[10]
+				s_comp2 = params[11]
+				
+				new_params[9], new_params[10], new_params[11] = a_comp1, v_comp1, s_comp1
+				new_params[6], new_params[7], new_params[8] = a_comp2, v_comp2, s_comp2
+				
+				# third emission line
+				a_comp1 = params[12]
+				v_comp1 = params[13]
+				s_comp1 = params[14]
+				
+				a_comp2 = params[15]
+				v_comp2 = params[16]
+				s_comp2 = params[17]
+				
+				new_params[15], new_params[16], new_params[17] = a_comp1, v_comp1, s_comp1
+				new_params[12], new_params[13], new_params[14] = a_comp2, v_comp2, s_comp2
+
+				# fourth emission line
+				a_comp1 = params[18]
+				v_comp1 = params[19]
+				s_comp1 = params[20]
+				
+				a_comp2 = params[21]
+				v_comp2 = params[22]
+				s_comp2 = params[23]
+				
+				new_params[21], new_params[22], new_params[23] = a_comp2, v_comp2, s_comp2
+				new_params[18], new_params[19], new_params[20] = a_comp1, v_comp1, s_comp1
+
+				# fifth emission line
+				a_comp1 = params[24]
+				v_comp1 = params[25]
+				s_comp1 = params[26]
+				
+				a_comp2 = params[27]
+				v_comp2 = params[28]
+				s_comp2 = params[29]
+				
+				new_params[27], new_params[28], new_params[29] = a_comp2, v_comp2, s_comp2
+				new_params[24], new_params[25], new_params[26] = a_comp1, v_comp1, s_comp1	
+			
 	return new_params
 
 def FitRoutine(FittingInfo, chunk_list):
@@ -520,19 +676,25 @@ def FitRoutine(FittingInfo, chunk_list):
 	
 			FittingInfo[0] : fit1
 			FittingInfo[1] : fit2
-			FittingInfo[2] : free_params
-			FittingInfo[3] : continuum_limits
-			FittingInfo[4] : guesses1
-			FittingInfo[5] : limits1
-			FittingInfo[6] : limited1
-			FittingInfo[7] : ties1
-			FittingInfo[8] : guesses2
-			FittingInfo[9] : limits2
-			FittingInfo[10] : limited2
-			FittingInfo[11] : ties2
-			FittingInfo[12] : random_pix_only
-			FittingInfo[13] : save_fits
-			FittingInfo[14] : savepath
+			FittingInfo[2] : fit3
+			FittingInfo[3] : free_params
+			FittingInfo[4] : continuum_limits
+			FittingInfo[5] : guesses1
+			FittingInfo[6] : limits1
+			FittingInfo[7] : limited1
+			FittingInfo[8] : ties1
+			FittingInfo[9] : guesses2
+			FittingInfo[10] : limits2
+			FittingInfo[11] : limited2
+			FittingInfo[12] : ties2
+			FittingInfo[13] : guesses3
+			FittingInfo[14] : limits3
+			FittingInfo[15] : limited3
+			FittingInfo[16] : ties3
+			FittingInfo[17] : redchisq_range
+			FittingInfo[18] : random_pix_only
+			FittingInfo[19] : save_fits
+			FittingInfo[20] : savepath
 			
 		See InputParams() for more details.
 		
@@ -561,19 +723,25 @@ def FitRoutine(FittingInfo, chunk_list):
 	# grab all the input parameters!
 	fit1 = FittingInfo[0]
 	fit2 = FittingInfo[1]
-	free_params = FittingInfo[2]
-	continuum_limits = FittingInfo[3]
-	guesses1 = FittingInfo[4]
-	limits1 = FittingInfo[5]
-	limited1 = FittingInfo[6]
-	ties1 = FittingInfo[7]
-	guesses2 = FittingInfo[8]
-	limits2 = FittingInfo[9]
-	limited2 = FittingInfo[10]
-	ties2 = FittingInfo[11]
-	random_pix_only = FittingInfo[12]
-	save_fits = FittingInfo[13]
-	savepath = FittingInfo[14]
+	fit3 = FittingInfo[2]
+	free_params = FittingInfo[3]
+	continuum_limits = FittingInfo[4]
+	guesses1 = FittingInfo[5]
+	limits1 = FittingInfo[6]
+	limited1 = FittingInfo[7]
+	ties1 = FittingInfo[8]
+	guesses2 = FittingInfo[9]
+	limits2 = FittingInfo[10]
+	limited2 = FittingInfo[11]
+	ties2 = FittingInfo[12]
+	guesses3 = FittingInfo[13]
+	limits3 = FittingInfo[14]
+	limited3 = FittingInfo[15]
+	ties3 = FittingInfo[16]
+	redchisq_range = FittingInfo[17]
+	random_pix_only = FittingInfo[18]
+	save_fits = FittingInfo[19]
+	savepath = FittingInfo[20]
 
 	# grab information for multiprocessing
 	chunk_num = chunk_list[0]  # chunk number
@@ -590,6 +758,10 @@ def FitRoutine(FittingInfo, chunk_list):
 	if (save_fits != False) & (fit2 == True):
 		if not os.path.exists('%s/fits2/' % savepath):
 			os.makedirs('%s/fits2/' % savepath)
+
+	if (save_fits != False) & (fit3 == True):
+		if not os.path.exists('%s/fits3/' % savepath):
+			os.makedirs('%s/fits3/' % savepath)
 
 	# get the cube in a form we can work with
 	# for the fitting using pyspeckit
@@ -642,24 +814,48 @@ def FitRoutine(FittingInfo, chunk_list):
 
 	# get the total number of parameters
 	# and number of degrees of freedom (i.e., free params)
-	if (fit1 == True) & (fit2 == False):
+	if (fit1 == True) & (fit2 == False) & (fit3 == False):  # if we only have fit1
 		npars1 = len(guesses1)
 		free_params1 = free_params
-	elif (fit1 == True) & (fit2 == True):
+	elif (fit1 == False) & (fit2 == True) & (fit3 == False):  # if we only have fit2
+		npars2 = len(guesses2)
+		free_params2 = free_params
+	elif (fit1 == False) & (fit2 == False) & (fit3 == True):  # if we only have fit3
+		npars3 = len(guesses3)
+		free_params3 = free_params
+	elif (fit1 == True) & (fit2 == True) & (fit3 == False):  # if we have both fit1 and fit2
 		npars1 = len(guesses1)
 		npars2 = len(guesses2)
 		free_params1 = free_params[0]
 		free_params2 = free_params[1]
-	elif (fit1 == False) & (fit2 == True):
+	elif (fit1 == True) & (fit2 == False) & (fit3 == True):  # if we have both fit1 and fit3
+		npars1 = len(guesses1)
+		npars3 = len(guesses3)
+		free_params1 = free_params[0]
+		free_params3 = free_params[1]
+	elif (fit1 == False) & (fit2 == True) & (fit3 == True):  # if we have both fit2 and fit3
 		npars2 = len(guesses2)
-		free_params2 = free_params
+		npars3 = len(guesses3)
+		free_params2 = free_params[0]
+		free_params3 = free_params[1]
+	elif (fit1 == True) & (fit2 == True) & (fit3 == True):  # if we have all three!
+		npars1 = len(guesses1)
+		npars2 = len(guesses2)
+		npars3 = len(guesses3)
+		free_params1 = free_params[0]
+		free_params2 = free_params[1]
+		free_params3 = free_params[2]
 	
 	# create two parameter cubes for the fits
-	# z-dimension is npars1 + 1 because we want an
+	# z-dimension is npars + 1 because we want an
 	# extra parameter to save the reduced chi squares
 	z, y, x = chunk.shape
-	parcube1 = np.zeros((npars1+1, y, x))  # rows, columns
-	parcube2 = np.zeros((npars2+1, y, x))  # rows, columns
+	if fit1 == True:
+		parcube1 = np.zeros((npars1+1, y, x))  # rows, columns
+	if fit2 == True:
+		parcube2 = np.zeros((npars2+1, y, x))  # rows, columns
+	if fit3 == True:
+		parcube3 = np.zeros((npars3+1, y, x))  # rows, columns
 
 	# option for only working with a random set of pixels
 	# let's get those random pixels!
@@ -725,11 +921,6 @@ def FitRoutine(FittingInfo, chunk_list):
 				# grab the spectrum
 				spec1 = pyspeckit.Spectrum(data=spectrum, xarr=x_axis)
 
-				#FIXME: test of baseline subtraction
-				spec1.baseline(xmin=6500, xmax=6800, 
-		   						exclude=[6545, 6600, 6700, 6750],
-		    					subtract=True, order=3)
-
 				# grab specific pixel value from the array
 				total_guesses1 = [guesses1[q][j,i] 
 									if type(guesses1[q]) == np.ndarray 
@@ -746,10 +937,6 @@ def FitRoutine(FittingInfo, chunk_list):
 					if chunk_num == 2 or multiprocess == 1: pbar.update(1)
 					count+=1
 					continue
-				# elif 'nan' in ties1[j][i][1]:
-				# 	if chunk_num == 2 or multiprocess == 1: pbar.update(1)
-				# 	count+=1
-				# 	continue
 					
 				# perform the fit!
 				spec1.specfit.multifit(fittype='gaussian',
@@ -779,8 +966,13 @@ def FitRoutine(FittingInfo, chunk_list):
 								amps1_list[i], centers1_list[i], widths1_list[i]) for i in
 								np.arange(len(amps1_list))]
 				model1 = sum(components1)
-				redchisq1 = red_chisq(spectrum, model1, num_params=len(amps1_list)*3, 
-										err=errs1, free_params=free_params1)
+
+				# redchisq1 = red_chisq(spectrum[redchisq_range], model1[redchisq_range], 
+			  	# 					num_params=len(amps1_list)*3, err=errs1, 
+				# 					free_params=free_params1)
+				redchisq1 = red_chisq(spectrum, model1, 
+					num_params=len(amps1_list)*3, err=errs1, 
+					free_params=free_params1)
 				
 				# save everything to the parameter cube!!!!
 				params1 = [par for sublist in zip(amps1_list, centers1_list, widths1_list)
@@ -838,17 +1030,10 @@ def FitRoutine(FittingInfo, chunk_list):
 					if chunk_num == 2 or multiprocess == 1: pbar.update(1)
 					count+=1
 					continue
-				# elif 'nan' in ties2[j][i][1]:
-				# 	if chunk_num == 2 or multiprocess == 1: pbar.update(1)
-				# 	count+=1
-				# 	continue
 
 				# grab the spectrum
 				spec2 = pyspeckit.Spectrum(data=spectrum, xarr=np.linspace(minval, maxval, 
 											len(spectrum)))
-				spec2.baseline(xmin=6500, xmax=6800, 
-		   						exclude=[6545, 6600, 6700, 6750],
-		    					subtract=True, order=3)
 
 				# perform the fit
 				spec2.specfit.multifit(fittype='gaussian',
@@ -878,15 +1063,19 @@ def FitRoutine(FittingInfo, chunk_list):
 								amps2_list[i], centers2_list[i], widths2_list[i]) 
 								for i in np.arange(len(amps2_list))]
 				model2 = sum(components2)
-				redchisq2 = red_chisq(spectrum, model2, num_params=len(amps2_list)*3, 
-										err=errs2, free_params=free_params2)
+				# redchisq2 = red_chisq(spectrum[redchisq_range], model2[redchisq_range], 
+			  	# 					num_params=len(amps2_list)*3, err=errs2, 
+				# 					free_params=free_params2)
+				redchisq2 = red_chisq(spectrum, model2, 
+			  						num_params=len(amps2_list)*3, err=errs2, 
+									free_params=free_params2)
 				
 				# check for proper component order 
 				# increasing wavelength
 				# save everything to the parameter cube!!!!
 				params2 = [par for sublist in zip(amps2_list, centers2_list, widths2_list)
 							for par in sublist]
-				ordered_params2 = component_order_check(params2)
+				ordered_params2 = component_order_check(params2, fit2)
 				ordered_params2 = np.append(ordered_params2,redchisq2)
 				parcube2[:,j,i] = ordered_params2 # tack redchisq on to end
 				
@@ -898,10 +1087,109 @@ def FitRoutine(FittingInfo, chunk_list):
 									xmin=6500, xmax=6800,
 									ymax=max(spectrum), fluxnorm=1e-20,
 									input_params = total_guesses2)
+						
+			############################# 
+			#### THREE COMPONENT FIT ####
+			############################# 
+			
+			# do we want to to fit with 3 Gaussians?
+			if fit3 == True:
+				
+				## TODO: make generalized
+				# if we are multiprocessing, make sure we are
+				# working with the correct chunk of guesses
+				if multiprocess != 1:
+					guesses3 = [guesses3[q][chunk_indices[0]:chunk_indices[1], 0:438] 
+									if type(guesses3[q]) == np.ndarray 
+									else guesses3[q] 
+									for q in range(len(guesses3))]
+					limits3 = [limits3[q][chunk_indices[0]:chunk_indices[1], 0:438] 
+									if type(limits3[q]) == np.ndarray 
+									else limits3[q] 
+									for q in range(len(limits3))]
+					ties3 = [ties3[q][chunk_indices[0]:chunk_indices[1], 0:438] 
+									if type(ties3[q]) == np.ndarray 
+									else ties3[q] 
+									for q in range(len(ties3))]
+				
+				# grab specific pixel value from the array
+				total_guesses3 = [guesses3[q][j,i] 
+									if type(guesses3[q]) == np.ndarray 
+									else guesses3[q] 
+									for q in range(len(guesses3))]
+				
+				total_limits3 =  [(limits3[q][0][j,i], limits3[q][1][j,i]) 
+										if type(limits3[q][0]) == np.ndarray 
+										else limits3[q] 
+										for q in range(len(limits3))]
+				
+				# if the model is nan, then we gotta skip the pixel
+				if np.isfinite(total_guesses3[1]) == False:
+					if chunk_num == 2 or multiprocess == 1: pbar.update(1)
+					count+=1
+					continue
+
+				# grab the spectrum
+				spec3 = pyspeckit.Spectrum(data=spectrum, xarr=np.linspace(minval, maxval, 
+											len(spectrum)))
+
+				# perform the fit
+				spec3.specfit.multifit(fittype='gaussian',
+										guesses = total_guesses3, 
+										limits = total_limits3,
+										limited = limited3,
+										# tied = ties2[j][i],
+										tied = ties3,
+										annotate = False)
+				spec3.measure(fluxnorm = 1e-20) # TODO: generalize
+				
+				# get errors for the reduced chi square
+				errs3 = compute_rms(x_axis, spectrum, continuum_limits[0], 
+									continuum_limits[1])
+				
+				# get the fit params
+				amps3_list = []
+				centers3_list = []
+				widths3_list = []
+				for line in spec3.measurements.lines.keys():
+					amps3_list.append(spec3.measurements.lines[line]['amp']/(1e-20))
+					centers3_list.append(spec3.measurements.lines[line]['pos'])
+					widths3_list.append(spec3.measurements.lines[line]['fwhm']/2.355)
+
+				# calculate reduced chi-square; first add up each Gaussian
+				components3 = [one_gaussian(np.array(chunk.spectral_axis), 
+								amps3_list[i], centers3_list[i], widths3_list[i]) 
+								for i in np.arange(len(amps3_list))]
+				model3 = sum(components3)
+				# redchisq3 = red_chisq(spectrum[redchisq_range], model3[redchisq_range], 
+			  	# 					num_params=len(amps3_list)*3, err=errs3, 
+				# 					free_params=free_params3)
+				redchisq3 = red_chisq(spectrum, model3, 
+			  						num_params=len(amps3_list)*3, err=errs3, 
+									free_params=free_params3)
+				
+				# check for proper component order 
+				# increasing wavelength
+				# save everything to the parameter cube!!!!
+				params3 = [par for sublist in zip(amps3_list, centers3_list, widths3_list)
+							for par in sublist]
+				# ordered_params3 = component_order_check(params3, fit3)
+				ordered_params3 = params3
+				ordered_params3 = np.append(ordered_params3, redchisq3)
+				parcube3[:,j,i] = ordered_params3 # tack redchisq on to end
+				
+				# option to print out fits
+				if (save_fits != False) & (count % save_fits == 0):						
+						# print the fit
+						plot_one_fit(i, j, spec3, redchisq3, 
+									savepath = '%s/fits3' % savepath, 
+									xmin=6500, xmax=6800,
+									ymax=max(spectrum), fluxnorm=1e-20,
+									input_params = total_guesses3)
 				
 			# up the counter + progress bar
 			count += 1
-			if chunk_num == 2 or multiprocess == 1: pbar.update(1)    
+			if chunk_num == 2 or multiprocess == 1: pbar.update(1)
 			## TODO: GENERALIZE FLUXNORM, XMIN, AND XMAX ABOVE
 
 
@@ -950,6 +1238,30 @@ def FitRoutine(FittingInfo, chunk_list):
 			hdul2.writeto('%s/fit2_%s.fits' % (savepath, chunk_num), overwrite=True)
 		except:
 			hdul2.writeto('fit2_%s.fits' % chunk_num, overwrite=True)
+
+
+	############################# 
+	## SAVE THREE COMPONENT FIT ##
+	############################# 
+
+	if fit3 == True:
+
+		# make a silly little header
+		hdr3 = fits.Header()
+		hdr3['FITTYPE'] = 'gaussian'
+		parname = ['Amplitude', 'Center', 'Width'] * int(npars3 // 3)
+		jj = 0
+		for ii in range(len(parname)):
+			if ii % 3 == 0:
+				jj+=1
+			kw = "PLANE%i" % ii
+			hdr3[kw] = parname[ii] + str(jj)
+		hdul3 = fits.PrimaryHDU(data=parcube3, header=hdr3)
+			
+		try:
+			hdul3.writeto('%s/fit3_%s.fits' % (savepath, chunk_num), overwrite=True)
+		except:
+			hdul3.writeto('fit3_%s.fits' % chunk_num, overwrite=True)
 
 	return
 
