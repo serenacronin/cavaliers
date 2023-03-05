@@ -17,9 +17,8 @@ import warnings
 startTime = time.time()  # TIME THE SCRIPT
 warnings.filterwarnings("ignore")
 
-
 # DEFINE ALL VARIABLES #
-R = 3000  # MUSE resolving power
+R = 2989  # MUSE resolving power
 Vsys = 243.  # Koribalski+04
 c = 3*10**5  # km/s
 z = Vsys / c
@@ -51,7 +50,7 @@ Voutfl_red = 50.0 # an initial guess
 restwls = [NIIa, Halpha, NIIb, SIIa, SIIb]
 modelcube = fits.open(wls_model)
 modelcubedat = modelcube[0].data
-vels = modelcubedat
+vels = modelcubedat[253:304, 210:270]
 wls_disk = [optical_vel_to_ang(vels, restwl) for restwl in restwls]
 
 # tie the center wavelengths to Halpha
@@ -64,18 +63,21 @@ tie_siib = SIIb - Halpha
 amp_tie = 3
 
 # parameters we are allowing to float (i.e., not tied)
-free_params = [6, 12, 18]
+# free_params = [6, 12, 18]
+# free_params = [6, 12]
+free_params = [12]
 
 ## buttons to toggle ##
 Region = False
-fit1 = True
+fit1 = False
 fit2 = True
-fit3 = True
-rand_pix_num = 100
+fit3 = False
+rand_pix_num = False
 # redchisq_range = '6525:6620, 6700:6750'
 redchisq_range = np.array([np.arange(6525,6620), np.arange(6700,6750)])
 # rand_pix_num = False
-savepath = '../ngc253/testFeb9/'
+# savepath = '../ngc253/testMarch5/'
+savepath = 'testMarch5/'
 # savepath = 'testFeb6/'
 multiprocess = 1
 save_fits_num = 1
@@ -99,6 +101,10 @@ if fit1 == True:
                     '%f*p[0]' % amp_tie, 'p[4] + %f' % tie_niib, 'p[5]',
                     '', 'p[4] + %f' % tie_siia, 'p[5]',
                     '', 'p[4] + %f' % tie_siib, 'p[5]']
+else:
+    amps1 = False
+    wls1 = False
+    ties1_per_pix = False
 
 ############################# 
 ##### TWO COMPONENT FIT #####
@@ -108,11 +114,11 @@ if fit2 == True:
 
     # amplitude + wavelength guesses
     amps2 = [100, 100, 300, 300, 300, 300, 100, 100, 150, 150]
-    wls2 = [NIIa*(Voutfl_blue + c)/c, wls_disk[0],
-            Halpha*(Voutfl_blue + c)/c, wls_disk[1],
-            NIIb*(Voutfl_blue + c)/c, wls_disk[2],
-            SIIa*(Voutfl_blue + c)/c, wls_disk[3],
-            SIIb*(Voutfl_blue + c)/c, wls_disk[4]]
+    wls2 = [wls_disk[0]*(Voutfl_blue + c)/c, wls_disk[0],
+            wls_disk[1]*(Voutfl_blue + c)/c, wls_disk[1],
+            wls_disk[2]*(Voutfl_blue + c)/c, wls_disk[2],
+            wls_disk[3]*(Voutfl_blue + c)/c, wls_disk[3],
+            wls_disk[4]*(Voutfl_blue + c)/c, wls_disk[4]]
 
     # tying amps, wavelengths, widths
     ties2_per_pix = ['', 'p[7] - %f' % tie_niia, 'p[8]', '', 'p[10] - %f' % tie_niia, 'p[11]',
@@ -120,6 +126,11 @@ if fit2 == True:
                         '%f*p[0]' % amp_tie, 'p[7] + %f' % tie_niib, 'p[8]', '%f*p[3]' % amp_tie, 'p[10] + %f' % tie_niib, 'p[11]',
                         '', 'p[7] + %f' % tie_siia, 'p[8]', '', 'p[10] + %f' % tie_siia, 'p[11]',
                         '', 'p[7] + %f' % tie_siib, 'p[8]', '', 'p[10] + %f' % tie_siib, 'p[11]']
+
+else:
+    amps2 = False
+    wls2 = False
+    ties2_per_pix = False
 
 ############################# 
 #### THREE COMPONENT FIT ####
@@ -129,11 +140,11 @@ if fit3 == True:
 
     # amplitude + wavelength guesses
     amps3 = [100, 100, 100, 300, 300, 300, 300, 300, 300, 100, 100, 100, 150, 150, 150]
-    wls3 = [NIIa*(Voutfl_blue + c)/c, wls_disk[0], NIIa*(Voutfl_red + c)/c,
-            Halpha*(Voutfl_blue + c)/c, wls_disk[1], Halpha*(Voutfl_red + c)/c,
-            NIIb*(Voutfl_blue + c)/c, wls_disk[2], NIIb*(Voutfl_red + c)/c,
-            SIIa*(Voutfl_blue + c)/c, wls_disk[3], SIIa*(Voutfl_red + c)/c,
-            SIIb*(Voutfl_blue + c)/c, wls_disk[4], SIIb*(Voutfl_red + c)/c]
+    wls3 = [wls_disk[0]*(Voutfl_blue + c)/c, wls_disk[0], NIIa*(Voutfl_red + c)/c,
+            wls_disk[1]*(Voutfl_blue + c)/c, wls_disk[1], Halpha*(Voutfl_red + c)/c,
+            wls_disk[2]*(Voutfl_blue + c)/c, wls_disk[2], NIIb*(Voutfl_red + c)/c,
+            wls_disk[3]*(Voutfl_blue + c)/c, wls_disk[3], SIIa*(Voutfl_red + c)/c,
+            wls_disk[4]*(Voutfl_blue + c)/c, wls_disk[4], SIIb*(Voutfl_red + c)/c]
 
     # tying amps, wavelengths, widths
     ties3_per_pix = ['', 'p[10] - %f' % tie_niia, 'p[11]', '', 'p[13] - %f' % tie_niia, 'p[14]', '', 'p[16] - %f' % tie_niia, 'p[17]', 
@@ -142,6 +153,10 @@ if fit3 == True:
                     '', 'p[10] + %f' % tie_siia, 'p[11]', '', 'p[13] + %f' % tie_siia, 'p[14]', '', 'p[16] + %f' % tie_siia, 'p[17]',
                     '', 'p[10] + %f' % tie_siib, 'p[11]', '', 'p[13] + %f' % tie_siib, 'p[14]', '', 'p[16] + %f' % tie_siib, 'p[17]']
 
+else:
+    amps3 = False
+    wls3 = False
+    ties3_per_pix = False
 
 ### --- CALL FUNCTIONS --- ####
 
@@ -150,8 +165,10 @@ if __name__ == '__main__':
     # make da cube
     cube = CreateCube(filename, SlabLower, SlabUpper, ContLower1, ContUpper1,
                        ContLower2, ContUpper2, Region=Region)
-        
     
+    # cube = cube[:,253:304, 210:270]
+    # cube = cube[:,225:275, 246:306]
+        
     # let's run for the full cube!
     # num_pix = len(cube[1,:,:][np.isfinite(cube[1,:,:])])
     # save_good_fits_num = int(round(0.01*num_pix,0))  # let's save 1% of good fits
