@@ -790,16 +790,10 @@ def FitRoutine(FittingInfo, chunk_list):
 	multiprocess = chunk_list[3]  # number of processes
 	
 	# make folders if needed
-	print(os.access(savepath, os.W_OK))
+	# print(os.access(savepath, os.W_OK))
 	if (save_fits != False) & (fit1 == True):
 		if not os.path.exists('%sfits1/' % savepath):
 			os.makedirs('%sfits1/' % savepath)
-
-	# # FIXME
-	# fits2_file = pd.read_csv('%sfits2.txt' % savepath)
-
-	# x_done = np.array(fits2_file['X'])
-	# y_done = np.array(fits2_file['Y'])
 
 	if (save_fits != False) & (fit2 == True):
 		if not os.path.exists('%sfits2/' % savepath):
@@ -823,6 +817,16 @@ def FitRoutine(FittingInfo, chunk_list):
 		f1.write('Wvl1,Wvl2,Wvl3,Wvl4,Wvl5,')
 		f1.write('Sig1,Sig2,Sig3,Sig4,Sig5\n')
 
+		# save errors
+		if os.path.exists("%sfits1_err.txt" % savepath):
+			os.remove("%sfits1_err.txt" % savepath)
+
+		e1 = open("%sfits1_err.txt" % savepath, "w")
+		e1.write('X,Y,RedChiSq,')
+		e1.write('Amp1,Amp2,Amp3,Amp4,Amp5,')
+		e1.write('Wvl1,Wvl2,Wvl3,Wvl4,Wvl5,')
+		e1.write('Sig1,Sig2,Sig3,Sig4,Sig5\n')
+
 	if fit2 == True:
 		# make text files
 		# well ok first remove the file if it exists so we can overwrite w new lines
@@ -835,12 +839,15 @@ def FitRoutine(FittingInfo, chunk_list):
 		f2.write('Wvl1,Wvl2,Wvl3,Wvl4,Wvl5,Wvl6,Wvl7,Wvl8,Wvl9,Wvl10,')
 		f2.write('Sig1,Sig2,Sig3,Sig4,Sig5,Sig6,Sig7,Sig8,Sig9,Sig10\n')
 
-		# if os.path.exists("%sinput_fits2.txt" % savepath):
-		# 	os.remove("%sinput_fits2.txt" % savepath)
-		# i2 = open("%sinput_fits2.txt" % savepath, "w")
+		# save errors
+		if os.path.exists("%sfits2_err.txt" % savepath):
+			os.remove("%sfits2_err.txt" % savepath)
 
-		# i2.write('X,Y,')
-		# i2.write('Wvl1,Wvl2,Wvl3,Wvl4,Wvl5,Wvl6,Wvl7,Wvl8,Wvl9,Wvl10\n')
+		e2 = open("%sfits2_err.txt" % savepath, "w")
+		e2.write('X,Y,RedChiSq,')
+		e2.write('Amp1,Amp2,Amp3,Amp4,Amp5,Amp6,Amp7,Amp8,Amp9,Amp10,')
+		e2.write('Wvl1,Wvl2,Wvl3,Wvl4,Wvl5,Wvl6,Wvl7,Wvl8,Wvl9,Wvl10,')
+		e2.write('Sig1,Sig2,Sig3,Sig4,Sig5,Sig6,Sig7,Sig8,Sig9,Sig10\n')
 
 	if fit3 == True:
 		if os.path.exists("%sfits3.txt" % savepath):
@@ -848,9 +855,19 @@ def FitRoutine(FittingInfo, chunk_list):
 
 		f3 = open("%sfits3.txt" % savepath, "w")
 		f3.write('X,Y,RedChiSq,')
-		f3.write('Amp1,Amp2,Amp3,Amp4,Amp5,Amp6,Amp7,Amp8,Amp9,Amp10,')
-		f3.write('Wvl1,Wvl2,Wvl3,Wvl4,Wvl5,Wvl6,Wvl7,Wvl8,Wvl9,Wvl10,')
-		f3.write('Sig1,Sig2,Sig3,Sig4,Sig5,Sig6,Sig7,Sig8,Sig9,Sig10\n')
+		f3.write('Amp1,Amp2,Amp3,Amp4,Amp5,Amp6,Amp7,Amp8,Amp9,Amp10,Amp11,Amp12,Amp13,Amp14,Amp15')
+		f3.write('Wvl1,Wvl2,Wvl3,Wvl4,Wvl5,Wvl6,Wvl7,Wvl8,Wvl9,Wvl10,Wvl11,Wvl12,Wvl13,Wvl14,Wvl15')
+		f3.write('Sig1,Sig2,Sig3,Sig4,Sig5,Sig6,Sig7,Sig8,Sig9,Sig10,Sig11,Sig12,Sig13,Sig14,Sig15\n')
+
+		# save errors
+		if os.path.exists("%sfits3_err.txt" % savepath):
+			os.remove("%sfits3_err.txt" % savepath)
+
+		e3 = open("%sfits3_err.txt" % savepath, "w")
+		e3.write('X,Y,RedChiSq,')
+		e3.write('Amp1,Amp2,Amp3,Amp4,Amp5,Amp6,Amp7,Amp8,Amp9,Amp10,Amp11,Amp12,Amp13,Amp14,Amp15')
+		e3.write('Wvl1,Wvl2,Wvl3,Wvl4,Wvl5,Wvl6,Wvl7,Wvl8,Wvl9,Wvl10,Wvl11,Wvl12,Wvl13,Wvl14,Wvl15')
+		e3.write('Sig1,Sig2,Sig3,Sig4,Sig5,Sig6,Sig7,Sig8,Sig9,Sig10,Sig11,Sig12,Sig13,Sig14,Sig15\n')
 
 	# get the cube in a form we can work with
 	# for the fitting using pyspeckit
@@ -874,8 +891,6 @@ def FitRoutine(FittingInfo, chunk_list):
 					  if type(ties1[q]) == np.ndarray 
 					  else ties1[q] 
 					  for q in range(len(ties1))]
-
-			
 			
 	# we need to loop over each pixel, calculate
 	# each fit, and output the parameters to a text file
@@ -883,33 +898,21 @@ def FitRoutine(FittingInfo, chunk_list):
 	# get the total number of parameters
 	# and number of degrees of freedom (i.e., free params)
 	if (fit1 == True) & (fit2 == False) & (fit3 == False):  # if we only have fit1
-		# npars1 = len(guesses1)
 		free_params1 = free_params[0]
 	elif (fit1 == False) & (fit2 == True) & (fit3 == False):  # if we only have fit2
-		#npars2 = len(guesses2)
 		free_params2 = free_params[0]
 	elif (fit1 == False) & (fit2 == False) & (fit3 == True):  # if we only have fit3
-		#npars3 = len(guesses3)
 		free_params3 = free_params[0]
 	elif (fit1 == True) & (fit2 == True) & (fit3 == False):  # if we have both fit1 and fit2
-		#npars1 = len(guesses1)
-		#npars2 = len(guesses2)
 		free_params1 = free_params[0]
 		free_params2 = free_params[1]
 	elif (fit1 == True) & (fit2 == False) & (fit3 == True):  # if we have both fit1 and fit3
-		#npars1 = len(guesses1)
-		#npars3 = len(guesses3)
 		free_params1 = free_params[0]
 		free_params3 = free_params[1]
 	elif (fit1 == False) & (fit2 == True) & (fit3 == True):  # if we have both fit2 and fit3
-		#npars2 = len(guesses2)
-		#npars3 = len(guesses3)
 		free_params2 = free_params[0]
 		free_params3 = free_params[1]
 	elif (fit1 == True) & (fit2 == True) & (fit3 == True):  # if we have all three!
-		#npars1 = len(guesses1)
-		#npars2 = len(guesses2)
-		#npars3 = len(guesses3)
 		free_params1 = free_params[0]
 		free_params2 = free_params[1]
 		free_params3 = free_params[2]
@@ -918,12 +921,6 @@ def FitRoutine(FittingInfo, chunk_list):
 	# z-dimension is npars + 1 because we want an
 	# extra parameter to save the reduced chi squares
 	_, y, x = chunk.shape
-	# if fit1 == True:
-	# 	parcube1 = np.zeros((npars1+1, y, x))  # rows, columns
-	# if fit2 == True:
-	# 	parcube2 = np.zeros((npars2+1, y, x))  # rows, columns
-	# if fit3 == True:
-	# 	parcube3 = np.zeros((npars3+1, y, x))  # rows, columns
 
 	# option for only working with a random set of pixels
 	# let's get those random pixels!
@@ -965,13 +962,6 @@ def FitRoutine(FittingInfo, chunk_list):
 
 		for j in np.arange(y): # y-axis
 
-			
-
-			# if (i in x_done) & (j in y_done):
-			# 	pbar.update(1)
-			# 	count+=1
-			# 	continue
-
 			# if (j != 16):
 			# 	continue
 	
@@ -997,9 +987,9 @@ def FitRoutine(FittingInfo, chunk_list):
 			x_axis = np.linspace(minval, maxval, len(spectrum))
 			
 			
-			############################# 
-			##### ONE COMPONENT FIT #####
-			############################# 
+#################################################################################################################### 
+# ONE COMPONENT FIT
+####################################################################################################################
 			if fit1 == True:
 				# grab the spectrum
 				spec1 = pyspeckit.Spectrum(data=spectrum, xarr=x_axis)
@@ -1026,12 +1016,11 @@ def FitRoutine(FittingInfo, chunk_list):
 										guesses = total_guesses1, 
 										limits = total_limits1,
 										limited = limited1,
-										# tied = ties1[j][i],
 										tied = ties1,
 										annotate = False)
 				spec1.measure(fluxnorm = 1e-20) # TODO: GENERALIZE FLUXNORM
 				
-				# get errors for the reduced chi square
+				# get errors on the spectrum for the reduced chi square
 				errs1 = compute_rms(x_axis, spectrum, continuum_limits[0], 
 									continuum_limits[1])
 
@@ -1040,9 +1029,12 @@ def FitRoutine(FittingInfo, chunk_list):
 				centers1_list = []
 				widths1_list = []
 				for line in spec1.measurements.lines.keys():
-					amps1_list.append(spec1.measurements.lines[line]['amp']/(1e-20)) #TODO: GENERALIZE
-					centers1_list.append(spec1.measurements.lines[line]['pos'])
-					widths1_list.append(spec1.measurements.lines[line]['fwhm']/2.355)
+					amps1_list.append(round(spec1.measurements.lines[line]['amp']/(1e-20), 4)) #TODO: GENERALIZE
+					centers1_list.append(round(spec1.measurements.lines[line]['pos'], 4))
+					widths1_list.append(round(spec1.measurements.lines[line]['fwhm']/2.355,4))
+
+				# grab the error on each parameter
+				err_params1 = [round(e,4) for e in spec1.specfit.parinfo.errors]
 
 				# save the parameters
 				params1 = [par for sublist in zip(amps1_list, centers1_list, widths1_list)
@@ -1064,9 +1056,9 @@ def FitRoutine(FittingInfo, chunk_list):
 				chans_spec = np.array(spectrum)[chans_ind]
 				chans_model1 = model1[chans_ind]
 
-				redchisq1 = red_chisq(chans_spec, chans_model1, 
+				redchisq1 = round(red_chisq(chans_spec, chans_model1, 
 					num_params=len(amps1_list)*3, err=errs1, 
-					free_params=free_params1)
+					free_params=free_params1),4)
 				
 				# option to print out fits
 				if (save_fits != False) & (count % save_fits == 0):						
@@ -1087,10 +1079,20 @@ def FitRoutine(FittingInfo, chunk_list):
 						    params1[2], params1[5], params1[8], params1[11], params1[14]))
 				f1.close()
 
+				# save errors on parameters to file
+				with open("%sfits1_err.txt" % savepath, "a") as e1:
+					e1.write('%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,'
+	      					'%s, %s, %s, %s, %s\n' %
+							(i, j, redchisq1,
+							err_params1[0], err_params1[3], err_params1[6], err_params1[9], err_params1[12],
+	     					err_params1[1], err_params1[4], err_params1[7], err_params1[10], err_params1[13],
+						    err_params1[2], err_params1[5], err_params1[8], err_params1[11], err_params1[14]))
+				e1.close()
 
-			############################# 
-			##### TWO COMPONENT FIT #####
-			############################# 
+
+#################################################################################################################### 
+# TWO COMPONENT FIT
+####################################################################################################################
 			
 			# do we want to to fit with 2 Gaussians?
 			if fit2 == True:
@@ -1140,9 +1142,12 @@ def FitRoutine(FittingInfo, chunk_list):
 				centers2_list = []
 				widths2_list = []
 				for line in spec2.measurements.lines.keys():
-					amps2_list.append(spec2.measurements.lines[line]['amp']/(1e-20))
-					centers2_list.append(spec2.measurements.lines[line]['pos'])
-					widths2_list.append(spec2.measurements.lines[line]['fwhm']/2.355)
+					amps2_list.append(round(spec2.measurements.lines[line]['amp']/(1e-20),4))
+					centers2_list.append(round(spec2.measurements.lines[line]['pos'],4))
+					widths2_list.append(round(spec2.measurements.lines[line]['fwhm']/2.355,4))
+
+				# grab the error on each parameter
+				err_params2 = [round(e,4) for e in spec2.specfit.parinfo.errors]
 
 				# save all of the parameters
 				params2 = [par for sublist in zip(amps2_list, centers2_list, widths2_list)
@@ -1164,9 +1169,9 @@ def FitRoutine(FittingInfo, chunk_list):
 				chans_spec = np.array(spectrum)[chans_ind]
 				chans_model2 = model2[chans_ind]
 
-				redchisq2 = red_chisq(chans_spec, chans_model2, 
+				redchisq2 = round(red_chisq(chans_spec, chans_model2, 
 					num_params=len(amps2_list)*3, err=errs2, 
-					free_params=free_params2)
+					free_params=free_params2),4)
 
 				# option to print out fits
 				if (save_fits != False) & (count % save_fits == 0):						
@@ -1190,10 +1195,25 @@ def FitRoutine(FittingInfo, chunk_list):
 	     					params2[2], params2[5], params2[8], params2[11], params2[14],
 						    params2[17], params2[20], params2[23], params2[26], params2[29]))
 				f2.close()
+
+
+				# save errors on parameters to file
+				with open("%sfits2_err.txt" % savepath, "a") as e2:
+					e2.write('%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,'
+	      					'%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,'
+	      					'%s, %s, %s, %s, %s, %s, %s, %s, %s, %s\n' %
+							(i, j, redchisq2,
+							err_params2[0], err_params2[3], err_params2[6], err_params2[9], err_params2[12],
+	     					err_params2[15], err_params2[18], err_params2[21], err_params2[24], err_params2[27],
+						    err_params2[1], err_params2[4], err_params2[7], err_params2[10], err_params2[13],
+							err_params2[16], err_params2[19], err_params2[22], err_params2[25], err_params2[28],
+	     					err_params2[2], err_params2[5], err_params2[8], err_params2[11], err_params2[14],
+						    err_params2[17], err_params2[20], err_params2[23], err_params2[26], err_params2[29]))
+				e2.close()
 						
-			############################# 
-			#### THREE COMPONENT FIT ####
-			############################ 
+#################################################################################################################### 
+# THREE COMPONENT FIT
+####################################################################################################################
 			
 			# do we want to to fit with 3 Gaussians?
 			if fit3 == True:
@@ -1255,9 +1275,12 @@ def FitRoutine(FittingInfo, chunk_list):
 				centers3_list = []
 				widths3_list = []
 				for line in spec3.measurements.lines.keys():
-					amps3_list.append(spec3.measurements.lines[line]['amp']/(1e-20))
-					centers3_list.append(spec3.measurements.lines[line]['pos'])
-					widths3_list.append(spec3.measurements.lines[line]['fwhm']/2.355)
+					amps3_list.append(round(spec3.measurements.lines[line]['amp']/(1e-20),4))
+					centers3_list.append(round(spec3.measurements.lines[line]['pos'],4))
+					widths3_list.append(round(spec3.measurements.lines[line]['fwhm']/2.355,4))
+
+				# grab the error on each parameter
+				err_params3 = [round(e,4) for e in spec3.specfit.parinfo.errors]
 
 				# save the parameters
 				params3 = [par for sublist in zip(amps3_list, centers3_list, widths3_list)
@@ -1279,9 +1302,9 @@ def FitRoutine(FittingInfo, chunk_list):
 				chans_spec = np.array(spectrum)[chans_ind]
 				chans_model3 = model3[chans_ind]
 
-				redchisq3 = red_chisq(chans_spec, chans_model3, 
+				redchisq3 = round(red_chisq(chans_spec, chans_model3, 
 					num_params=len(amps3_list)*3, err=errs3, 
-					free_params=free_params3)
+					free_params=free_params3),4)
 				
 				# option to print out fits
 				if (save_fits != False) & (count % save_fits == 0):						
@@ -1310,87 +1333,30 @@ def FitRoutine(FittingInfo, chunk_list):
 							params3[17], params3[20], params3[23], params3[26], params3[29],
 							params3[32], params3[35], params3[38], params3[41], params3[44]))
 				f3.close()
+
+				# save errors on parameters to file
+				with open("%sfits3_err.txt" % savepath, "a") as e3:
+					e3.write('%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,'
+	      					'%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,'
+	      					'%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,'
+							 '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,'
+							'%s, %s, %s\n' %
+							(i, j, redchisq3,
+							err_params3[0], err_params3[3], err_params3[6], err_params3[9], err_params3[12],
+	     					err_params3[15], err_params3[18], err_params3[21], err_params3[24], err_params3[27],
+						    err_params3[30], err_params3[33], err_params3[36], err_params3[39], err_params3[42],
+							err_params3[1], err_params3[4], err_params3[7], err_params3[10], err_params3[13],
+	     					err_params3[16], err_params3[19], err_params3[22], err_params3[25], err_params3[28],
+						    err_params3[31], err_params3[34], err_params3[37], err_params3[40], err_params3[43],
+							err_params3[2], err_params3[5], err_params3[8], err_params3[11], err_params3[14],
+							err_params3[17], err_params3[20], err_params3[23], err_params3[26], err_params3[29],
+							err_params3[32], err_params3[35], err_params3[38], err_params3[41], err_params3[44]))
+				e3.close()
 				
 			# up the counter + progress bar
 			count += 1
 			if chunk_num == 2 or multiprocess == 1: pbar.update(1)
 			## TODO: GENERALIZE FLUXNORM, XMIN, AND XMAX ABOVE
-
-
-	############################# 
-	## SAVE ONE COMPONENT FIT ###
-	############################# 
-	
-	# if fit1 == True:
-	# 	# make a silly little header
-	# 	hdr1 = fits.Header()
-	# 	hdr1['FITTYPE'] = 'gaussian'
-	# 	parname = ['Amplitude', 'Center', 'Width'] * int(npars1 // 2 // 3)
-	# 	jj = 0
-	# 	for ii in range(len(parname)):
-	# 		if ii % 3 == 0:
-	# 			jj+=1
-	# 		kw = "PLANE%i" % ii
-	# 		hdr1[kw] = parname[ii] + str(jj)
-	# 	hdul1 = fits.PrimaryHDU(data=parcube1, header=hdr1)
-			
-	# 	try:
-	# 		hdul1.writeto('%s/fit1_%s.fits' % (savepath, chunk_num), overwrite=True)
-	# 	except:
-	# 		hdul1.writeto('fit1_%s.fits' % chunk_num, overwrite=True)
-
-
-	############################# 
-	## SAVE TWO COMPONENT FIT ###
-	############################# 
-
-	# if fit2 == True:
-
-	# 	# make a silly little header
-	# 	hdr2 = fits.Header()
-	# 	hdr2['FITTYPE'] = 'gaussian'
-	# 	parname = ['Amplitude', 'Center', 'Width'] * int(npars2 // 3)
-	# 	jj = 0
-	# 	for ii in range(len(parname)):
-	# 		if ii % 3 == 0:
-	# 			jj+=1
-	# 		kw = "PLANE%i" % ii
-	# 		hdr2[kw] = parname[ii] + str(jj)
-	# 	hdul2 = fits.PrimaryHDU(data=parcube2, header=hdr2)
-			
-	# 	try:
-	# 		hdul2.writeto('%s/fit2_%s.fits' % (savepath, chunk_num), overwrite=True)
-	# 	except:
-	# 		hdul2.writeto('fit2_%s.fits' % chunk_num, overwrite=True)
-			
-	# 	try:
-	# 		hdul2.writeto('%s/input_fit2_%s.fits' % (savepath, chunk_num), overwrite=True)
-	# 	except:
-	# 		hdul2.writeto('input_fit2_%s.fits' % chunk_num, overwrite=True)
-
-
-	############################# 
-	## SAVE THREE COMPONENT FIT ##
-	############################# 
-
-	# if fit3 == True:
-
-	# 	# make a silly little header
-	# 	hdr3 = fits.Header()
-	# 	hdr3['FITTYPE'] = 'gaussian'
-	# 	parname = ['Amplitude', 'Center', 'Width'] * int(npars3 // 3)
-	# 	jj = 0
-	# 	for ii in range(len(parname)):
-	# 		if ii % 3 == 0:
-	# 			jj+=1
-	# 		kw = "PLANE%i" % ii
-	# 		hdr3[kw] = parname[ii] + str(jj)
-	# 	hdul3 = fits.PrimaryHDU(data=parcube3, header=hdr3)
-			
-	# 	try:
-	# 		hdul3.writeto('%s/fit3_%s.fits' % (savepath, chunk_num), overwrite=True)
-	# 	except:
-	# 		hdul3.writeto('fit3_%s.fits' % chunk_num, overwrite=True)
 
 	return
 
@@ -1410,7 +1376,6 @@ def RunFit(cube, fitparams, multiprocess=1):
 	# do we want the cube fitting process to run like normal?
 	# TODO: GENERALIZE
 
-	# FIXME: end-to-end test
 	if multiprocess == 1:
 		chunk_list = [0, cube[:,:,:], (0,437), multiprocess]
 		# chunk_list = [0, cube[:,210:250,273:304], (0,437), multiprocess]
