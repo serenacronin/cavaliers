@@ -100,7 +100,7 @@ def CreateCube(filename, SlabLower, SlabUpper, ContLower1, ContUpper1,
 	return cube
 	
 		
-def optical_vel_to_ang(vels, restwl):
+def optical_vel_to_ang(vels, Vsys, restwl):
 	
 	"""
 	Quick function to convert optical velocities
@@ -120,7 +120,7 @@ def optical_vel_to_ang(vels, restwl):
 	"""
 	
 	c = 3.0*10**5
-	wls = restwl*(vels + c)/c
+	wls = restwl*((vels + Vsys) + c)/c
 	
 	return wls
 

@@ -48,9 +48,9 @@ Voutfl_red = 50.0 # an initial guess
 restwls = [NIIa, Halpha, NIIb, SIIa, SIIb]
 modelcube = fits.open(wls_model)
 modelcubedat = modelcube[0].data
-# vels = modelcubedat[253:304, 210:270]
+# vels = modelcubedat[225:275, 246:306]
 vels = modelcubedat
-wls_disk = [optical_vel_to_ang(vels, restwl) for restwl in restwls]
+wls_disk = [optical_vel_to_ang(vels, Vsys, restwl) for restwl in restwls]
 
 # tie the center wavelengths to Halpha
 tie_niia = Halpha - NIIa
@@ -74,9 +74,10 @@ fit3 = False
 rand_pix_num = False
 # redchisq_range = '6525:6620, 6700:6750'
 redchisq_range = np.array([np.arange(6525,6620), np.arange(6700,6750)])
-savepath = '../ngc253/March14/'
+savepath = '../ngc253/April2/'
 multiprocess = 1
 save_fits_num = 100
+# save_fits_num = 1
 
 #################################################################################################################### 
 # ONE COMPONENT FIT
