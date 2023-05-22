@@ -18,7 +18,7 @@ startTime = time.time()  # TIME THE SCRIPT
 warnings.filterwarnings("ignore")
 
 # DEFINE ALL VARIABLES #
-R = 3000  # MUSE resolving power
+R = 2989  # MUSE resolving power
 Vsys = 243.  # Koribalski+04
 c = 3*10**5  # km/s
 z = Vsys / c
@@ -26,8 +26,6 @@ z = Vsys / c
 # file names
 filename = '../ngc253/data/ADP.2018-11-22T21_29_46.157.fits'
 wls_model = '../ngc253/data/ngc253_se_halpha_vel_model_smooth_FINAL.fits'
-# filename = '../ADP.2018-11-22T21_29_46.157.fits'
-# wls_model = '../ngc253_se_halpha_vel_model_smooth_FINAL.fits'
 
 # info for continuum
 SlabLower = 6500
@@ -50,8 +48,9 @@ Voutfl_red = 50.0 # an initial guess
 restwls = [NIIa, Halpha, NIIb, SIIa, SIIb]
 modelcube = fits.open(wls_model)
 modelcubedat = modelcube[0].data
-vels = modelcubedat[253:304, 210:270]
-wls_disk = [optical_vel_to_ang(vels, restwl) for restwl in restwls]
+# vels = modelcubedat[225:275, 246:306]
+vels = modelcubedat
+wls_disk = [optical_vel_to_ang(vels, Vsys, restwl) for restwl in restwls]
 
 # tie the center wavelengths to Halpha
 tie_niia = Halpha - NIIa
@@ -64,6 +63,7 @@ amp_tie = 3
 
 # parameters we are allowing to float (i.e., not tied)
 # free_params = [6, 12, 18]
+# free_params = [6, 12]
 free_params = [12]
 
 ## buttons to toggle ##
@@ -74,18 +74,14 @@ fit3 = False
 rand_pix_num = False
 # redchisq_range = '6525:6620, 6700:6750'
 redchisq_range = np.array([np.arange(6525,6620), np.arange(6700,6750)])
-# rand_pix_num = False
-savepath = '../ngc253/testFeb24/'
-# savepath = 'testFeb6/'
+savepath = '../ngc253/April2/plots/'
 multiprocess = 1
-save_fits_num = 1
+save_fits_num = 100
+# save_fits_num = 1
 
-# num_pix = len(cube[1,:,:][np.isfinite(cube[1,:,:])])
-# save_good_fits_num = int(round(0.01*num_pix,0))  # let's save 1% of good fits
-
-############################# 
-##### ONE COMPONENT FIT #####
-#############################
+#################################################################################################################### 
+# ONE COMPONENT FIT
+####################################################################################################################
 
 if fit1 == True:
 
@@ -104,9 +100,9 @@ else:
     wls1 = False
     ties1_per_pix = False
 
-############################# 
-##### TWO COMPONENT FIT #####
-#############################
+#################################################################################################################### 
+# TWO COMPONENT FIT
+####################################################################################################################
 
 if fit2 == True:
 
@@ -130,19 +126,19 @@ else:
     wls2 = False
     ties2_per_pix = False
 
-############################# 
-#### THREE COMPONENT FIT ####
-#############################
+#################################################################################################################### 
+# THREE COMPONENT FIT
+####################################################################################################################
 
 if fit3 == True:
 
     # amplitude + wavelength guesses
     amps3 = [100, 100, 100, 300, 300, 300, 300, 300, 300, 100, 100, 100, 150, 150, 150]
-    wls3 = [NIIa*(Voutfl_blue + c)/c, wls_disk[0], NIIa*(Voutfl_red + c)/c,
-            Halpha*(Voutfl_blue + c)/c, wls_disk[1], Halpha*(Voutfl_red + c)/c,
-            NIIb*(Voutfl_blue + c)/c, wls_disk[2], NIIb*(Voutfl_red + c)/c,
-            SIIa*(Voutfl_blue + c)/c, wls_disk[3], SIIa*(Voutfl_red + c)/c,
-            SIIb*(Voutfl_blue + c)/c, wls_disk[4], SIIb*(Voutfl_red + c)/c]
+    wls3 = [wls_disk[0]*(Voutfl_blue + c)/c, wls_disk[0], wls_disk[0]*(Voutfl_red + c)/c,
+            wls_disk[1]*(Voutfl_blue + c)/c, wls_disk[1], wls_disk[1]*(Voutfl_red + c)/c,
+            wls_disk[2]*(Voutfl_blue + c)/c, wls_disk[2], wls_disk[2]*(Voutfl_red + c)/c,
+            wls_disk[3]*(Voutfl_blue + c)/c, wls_disk[3], wls_disk[3]*(Voutfl_red + c)/c,
+            wls_disk[4]*(Voutfl_blue + c)/c, wls_disk[4], wls_disk[4]*(Voutfl_red + c)/c]
 
     # tying amps, wavelengths, widths
     ties3_per_pix = ['', 'p[10] - %f' % tie_niia, 'p[11]', '', 'p[13] - %f' % tie_niia, 'p[14]', '', 'p[16] - %f' % tie_niia, 'p[17]', 
@@ -164,11 +160,7 @@ if __name__ == '__main__':
     cube = CreateCube(filename, SlabLower, SlabUpper, ContLower1, ContUpper1,
                        ContLower2, ContUpper2, Region=Region)
     
-    cube = cube[:,253:304, 210:270]
-        
-    # let's run for the full cube!
-    # num_pix = len(cube[1,:,:][np.isfinite(cube[1,:,:])])
-    # save_good_fits_num = int(round(0.01*num_pix,0))  # let's save 1% of good fits
+    # cube = cube[:,225:275, 246:306]
 	
     FittingInfo = InputParams(fit1, fit2, fit3, R, free_params, 
                             continuum_limits=[ContLower1, ContUpper2],

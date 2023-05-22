@@ -24,6 +24,89 @@ from gauss_tools import one_gaussian, three_gaussian, red_chisq, chisq
 import scipy
 warnings.filterwarnings("ignore")
 
+
+
+def plot_one_fit_PAPER(xpix, ypix, spec, redchisq, savepath, xmin, xmax, ymax, fluxnorm,
+                 input_params, show_components=True):
+    
+
+    plt.rcParams['text.usetex'] = False
+    plt.rcParams["axes.edgecolor"] = "black"
+    plt.rcParams["axes.linewidth"] = 2.5
+    plt.rcParams["axes.labelweight"] = 'bold'
+    plt.rcParams["axes.titleweight"] = 'bold'
+    plt.rcParams["font.family"] = "courier new"
+    plt.rcParams["font.style"] = "normal"
+    plt.rcParams["mathtext.default"] = "regular"
+    plt.rcParams["font.weight"] = 'bold'
+    plt.rcParams["figure.figsize"] = (7,5)   
+    plt.rcParams['xtick.major.size'] = 5
+    plt.rcParams['xtick.major.width'] = 2.5  
+    plt.rcParams['ytick.major.size'] = 5
+    plt.rcParams['ytick.major.width'] = 2.5  
+    plt.rcParams['ytick.direction'] = 'in'  
+    plt.rcParams['xtick.direction'] = 'in'  
+    
+    # set up the plotter
+    spec.plotter(xmin = xmin, xmax = xmax, ymin = -0.4*ymax) 
+    spec.measure(fluxnorm = fluxnorm)
+    
+    # set axes labels and refresh the plotter
+    spec.plotter.axis.set_xlabel(r'Wavelength [$\AA$]', fontsize=14)
+    spec.plotter.axis.set_ylabel(r'S$_{\lambda}$ [$10^{-20} erg/s/cm^2/\AA}$]',
+                                 fontsize=14)
+    
+    # plot the fit
+    spec.specfit.plot_fit(annotate=False, 
+                          show_components=False,
+                          composite_fit_color='tab:pink',
+                          lw=1.5)
+    
+    # plot the residuals
+    spec.specfit.plotresiduals(axis=spec.plotter.axis,
+                                clear=False,
+                                yoffset=-0.2*ymax, 
+                                color='tab:purple',
+                                linewidth=1.5)
+    
+    # plot the components individually if applicable
+    if show_components == True:
+        spec.specfit.plot_components(component_fit_color='tab:cyan',
+                                    lw=1.5)
+        custom_lines = [Line2D([0], [0], color='tab:pink', lw=2),
+                        Line2D([0], [0], color='tab:cyan', lw=2),
+                        Line2D([0], [0], color='tab:purple', lw=2),
+                        # Line2D([0], [0], color='white', lw=2),
+                        # Line2D([0], [0], color='white', lw=2),
+                        Line2D([0], [0], color='white', lw=2)]
+
+        plt.legend(custom_lines,['Composite', 'Components', 'Residuals',
+                                # 'Resid. stdev (line-free): %s' % round(resids_linefree,2),
+                                # 'Resid. stdev (line): %s' % round(resids_line,2),
+                                r'$\chi_{r}^{2}$ = %s' % round(redchisq,2)], fontsize=12, 
+                                loc='upper right')
+    else:
+        custom_lines = [Line2D([0], [0], color='tab:pink', lw=2),
+                        Line2D([0], [0], color='tab:purple', lw=2),
+                        # Line2D([0], [0], color='white', lw=2),
+                        Line2D([0], [0], color='white', lw=2)]
+
+        plt.legend(custom_lines,['Fit', 'Residuals',
+                                 'RedChiSq: %s' % round(redchisq,2)], fontsize=12, 
+                  loc='upper right')
+
+        
+    # make a title and legend
+    plt.title('Pixel (x, y) = (%s, %s)' % (xpix,ypix), fontsize=14)
+    
+    # adjust the plot so that the annotation can be seen, then save to file
+    plt.xlabel(r'Wavelength [$\AA$]', fontsize=14)
+    
+    plt.savefig('%s/pixel_%s_%s.png' % (savepath, xpix, ypix), 
+                dpi=200)
+    plt.close() # do not print to the terminal lmao
+    return
+
 def plot_one_fit(xpix, ypix, spec, redchisq, savepath, xmin, xmax, ymax, fluxnorm,
                  input_params, show_components=True):
     
@@ -45,7 +128,7 @@ def plot_one_fit(xpix, ypix, spec, redchisq, savepath, xmin, xmax, ymax, fluxnor
     
     # set axes labels and refresh the plotter
     spec.plotter.axis.set_xlabel(r'Wavelength $(\AA)$')
-    spec.plotter.axis.set_ylabel(r'Flux $(10^{-20} \mathrm{erg/s/cm^2/\AA})$')
+    spec.plotter.axis.set_ylabel(r'S$_{\lambda}$ $(10^{-20} \mathrm{erg/s/cm^2/\AA})$')
     # spec.plotter.refresh()
     
     # plot the fit
@@ -116,7 +199,7 @@ def plot_one_fit(xpix, ypix, spec, redchisq, savepath, xmin, xmax, ymax, fluxnor
     # plt.annotate('%s' % round(input_params[5],4), xy=(6685, 330), 
     #              annotation_clip=False, color='tab:green')
     # plt.annotate('%s' % round(input_params[6],4), xy=(6685, 290), 
-    #              annotation_clip=False, color='tab:green')
+    #          2    annotation_clip=False, color='tab:green')
     # plt.annotate('%s' % round(input_params[7],4), xy=(6685, 250), 
     #              annotation_clip=False, color='tab:green')
     # plt.annotate('%s' % round(input_params[8],4), xy=(6685, 210), 
