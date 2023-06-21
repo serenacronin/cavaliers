@@ -1,9 +1,9 @@
 """
-Created on Wed Mar 15 2023
+Created on Mon June 6 2023
 
 @author: Serena A. Cronin
 
-This script will reorder the components of the two Gaussian fit.
+This script will reorder the components of the three systems of lines fit.
 
 """
 # imports
@@ -30,7 +30,7 @@ def wavelength_to_velocity(wls, Vsys, restwl):
 	return vels - Vsys
 
 
-def reorder_components2(infile, outfile, infile_err, outfile_err):
+def reorder_components3(infile, outfile, infile_err, outfile_err):
 	
 	"""
 	This function reads in the parameter (infile) and error (infile_err) files of the two Gaussian component fits

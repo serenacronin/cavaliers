@@ -35,9 +35,9 @@ plt.rcParams["font.weight"] = 'bold'
 restwls = [6548.05, 6562.801, 6583.45, 6716.44, 6730.82]
 Vsys = 243. # km/s
 savepath = '../ngc253/janskyApril2/'
-reorder = True
-vels = True
-errs = True
+reorder = False
+vels = False
+errs = False
 flux = False
 
 if reorder == True:
@@ -51,7 +51,7 @@ if vels == True:
                     err_infile='%sfits2_err_reordered.txt' % savepath,
                     outfile='%sfits2_reordered.txt' % savepath, 
                     err_outfile='%sfits2_err_reordered.txt' % savepath,
-                    Vsys=Vsys, restwls=restwls)
+                    restwls=restwls, Vsys=Vsys, i=78.)
     
 if errs == True:
     # get the true errors by multiplying the errors by the rms per pixel
@@ -83,19 +83,19 @@ if flux == True:
 ##############################################################################
 savepath = '../ngc253/janskyApril2/'
 
-check_fits = False
-sig_to_noise = False
-velocities = False
-ratios = False
-vels_rats = False
+check_fits = True
+sig_to_noise = True
+velocities = True
+ratios = True
+vels_rats = True
 
-plot_s2n = False
-plot_velocities = False
-take_ratio = False
-assign_comps = False
-plot_ratios = False
-plot_NII_Halpha = False
-plot_compare_crit = False
+plot_s2n = True
+plot_velocities = True
+take_ratio = True
+assign_comps = True
+plot_ratios = True
+plot_NII_Halpha = True
+plot_compare_crit = True
 line = 'Halpha'
 
 if check_fits == True:

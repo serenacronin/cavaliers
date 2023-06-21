@@ -48,8 +48,8 @@ Voutfl_red = 50.0 # an initial guess
 restwls = [NIIa, Halpha, NIIb, SIIa, SIIb]
 modelcube = fits.open(wls_model)
 modelcubedat = modelcube[0].data
-# vels = modelcubedat[225:275, 246:306]
-vels = modelcubedat
+vels = modelcubedat[225:275, 246:306]
+# vels = modelcubedat
 wls_disk = [optical_vel_to_ang(vels, Vsys, restwl) for restwl in restwls]
 
 # tie the center wavelengths to Halpha
@@ -74,10 +74,10 @@ fit3 = False
 rand_pix_num = False
 # redchisq_range = '6525:6620, 6700:6750'
 redchisq_range = np.array([np.arange(6525,6620), np.arange(6700,6750)])
-savepath = '../ngc253/April2/plots/'
+savepath = '../ngc253/testJune7/plots/'
 multiprocess = 1
-save_fits_num = 100
-# save_fits_num = 1
+# save_fits_num = 100
+save_fits_num = 1
 
 #################################################################################################################### 
 # ONE COMPONENT FIT
@@ -90,11 +90,18 @@ if fit1 == True:
     wls1 = [wls_disk[0], wls_disk[1], wls_disk[2], wls_disk[3], wls_disk[4]]
 
     # tying amps, wavelengths, widths
-    ties1_per_pix = ['', 'p[4] - %f' % tie_niia, 'p[5]',
+    # ties1_per_pix = ['', 'p[4] - %f' % tie_niia, 'p[5]',
+    #                 '', '', '',
+    #                 '%f*p[0]' % amp_tie, 'p[4] + %f' % tie_niib, 'p[5]',
+    #                 '', 'p[4] + %f' % tie_siia, 'p[5]',
+    #                 '', 'p[4] + %f' % tie_siib, 'p[5]']
+
+    ties1_per_pix = ['', '%f * p[4] / %f' % (NIIa, Halpha), 'p[5]',
                     '', '', '',
-                    '%f*p[0]' % amp_tie, 'p[4] + %f' % tie_niib, 'p[5]',
-                    '', 'p[4] + %f' % tie_siia, 'p[5]',
-                    '', 'p[4] + %f' % tie_siib, 'p[5]']
+                    '%f*p[0]' % amp_tie, '%f * p[4] / %f' % (NIIb, Halpha), 'p[5]',
+                    '', '%f * p[4] / %f' % (SIIa, Halpha), 'p[5]',
+                    '', '%f * p[4] / %f' % (SIIb, Halpha), 'p[5]']
+
 else:
     amps1 = False
     wls1 = False
@@ -115,11 +122,11 @@ if fit2 == True:
             wls_disk[4]*(Voutfl_blue + c)/c, wls_disk[4]]
 
     # tying amps, wavelengths, widths
-    ties2_per_pix = ['', 'p[7] - %f' % tie_niia, 'p[8]', '', 'p[10] - %f' % tie_niia, 'p[11]',
+    ties2_per_pix = ['', '%f * p[7] / %f' % (NIIa, Halpha), 'p[8]', '', '%f * p[10] / %f' % (NIIa, Halpha), 'p[11]',
                         '', '', '', '', '', '',
-                        '%f*p[0]' % amp_tie, 'p[7] + %f' % tie_niib, 'p[8]', '%f*p[3]' % amp_tie, 'p[10] + %f' % tie_niib, 'p[11]',
-                        '', 'p[7] + %f' % tie_siia, 'p[8]', '', 'p[10] + %f' % tie_siia, 'p[11]',
-                        '', 'p[7] + %f' % tie_siib, 'p[8]', '', 'p[10] + %f' % tie_siib, 'p[11]']
+                        '%f*p[0]' % amp_tie, '%f * p[7] / %f' % (NIIb, Halpha), 'p[8]', '%f*p[3]' % amp_tie, '%f * p[10] / %f' % (NIIb, Halpha), 'p[11]',
+                        '', '%f * p[7] / %f' % (SIIa, Halpha), 'p[8]', '', '%f * p[10] / %f' % (SIIa, Halpha), 'p[11]',
+                        '', '%f * p[7] / %f' % (SIIb, Halpha), 'p[8]', '', '%f * p[10] / %f' % (SIIb, Halpha), 'p[11]']
 
 else:
     amps2 = False
@@ -141,11 +148,11 @@ if fit3 == True:
             wls_disk[4]*(Voutfl_blue + c)/c, wls_disk[4], wls_disk[4]*(Voutfl_red + c)/c]
 
     # tying amps, wavelengths, widths
-    ties3_per_pix = ['', 'p[10] - %f' % tie_niia, 'p[11]', '', 'p[13] - %f' % tie_niia, 'p[14]', '', 'p[16] - %f' % tie_niia, 'p[17]', 
+    ties3_per_pix = ['', '%f * p[10] / %f' % (NIIa, Halpha), 'p[11]', '', '%f * p[13] / %f' % (NIIa, Halpha), 'p[14]', '', '%f * p[16] / %f' % (NIIa, Halpha), 'p[17]', 
                     '', '', '', '', '', '', '', '', '',
-                    '%f*p[0]' % amp_tie, 'p[10] + %f' % tie_niib, 'p[11]', '%f*p[6]' % amp_tie, 'p[13] + %f' % tie_niib, 'p[14]', '%f*p[6]' % amp_tie, 'p[16] + %f' % tie_niib, 'p[17]',
-                    '', 'p[10] + %f' % tie_siia, 'p[11]', '', 'p[13] + %f' % tie_siia, 'p[14]', '', 'p[16] + %f' % tie_siia, 'p[17]',
-                    '', 'p[10] + %f' % tie_siib, 'p[11]', '', 'p[13] + %f' % tie_siib, 'p[14]', '', 'p[16] + %f' % tie_siib, 'p[17]']
+                    '%f*p[0]' % amp_tie, '%f * p[10] / %f' % (NIIb, Halpha), 'p[11]', '%f*p[6]' % amp_tie, '%f * p[13] / %f' % (NIIb, Halpha), 'p[14]', '%f*p[6]' % amp_tie, '%f * p[16] / %f' % (NIIb, Halpha), 'p[17]',
+                    '', '%f * p[10] / %f' % (SIIa, Halpha), 'p[11]', '', '%f * p[13] / %f' % (SIIa, Halpha), 'p[14]', '', '%f * p[16] / %f' % (SIIa, Halpha), 'p[17]',
+                    '', '%f * p[10] / %f' % (SIIb, Halpha), 'p[11]', '', '%f * p[13] / %f' % (SIIb, Halpha), 'p[14]', '', '%f * p[16] / %f' % (SIIb, Halpha), 'p[17]']
 
 else:
     amps3 = False
@@ -160,7 +167,7 @@ if __name__ == '__main__':
     cube = CreateCube(filename, SlabLower, SlabUpper, ContLower1, ContUpper1,
                        ContLower2, ContUpper2, Region=Region)
     
-    # cube = cube[:,225:275, 246:306]
+    cube = cube[:,225:275, 246:306]
 	
     FittingInfo = InputParams(fit1, fit2, fit3, R, free_params, 
                             continuum_limits=[ContLower1, ContUpper2],

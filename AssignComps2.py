@@ -305,8 +305,8 @@ def assign_comps_mapps(og, infile, outflow, disk, line, criteria, savepath, plot
         vmin = 0
         vmax = 5
     if criteria == 'Velocities':
-        vmin = -300
-        vmax = 300
+        vmin = -450
+        vmax = 450
     cmap = 'rainbow'
 
     ax = plt.subplot(4, 2, 1)
@@ -338,8 +338,8 @@ def assign_comps_mapps(og, infile, outflow, disk, line, criteria, savepath, plot
     bar.ax.tick_params(width=2.5, labelsize=16, length=7, direction='in')
 
     # velocity
-    vmin = -300.
-    vmax = 300.
+    vmin = -450.
+    vmax = 450.
 
     ax = plt.subplot(4, 2, 5)
     im =  ax.imshow(mapp_out_vel, vmin=vmin, vmax=vmax, cmap=cmap, origin='lower')
@@ -352,7 +352,7 @@ def assign_comps_mapps(og, infile, outflow, disk, line, criteria, savepath, plot
 
     # FWHM
     vmin = 0
-    vmax = 300
+    vmax = 450
 
     ax = plt.subplot(4, 2, 7)
     im =  ax.imshow(mapp_out_fwhm, vmin=vmin, vmax=vmax, cmap=cmap, origin='lower')
@@ -802,8 +802,8 @@ def assign_comps_mapps_ALL(og, infile, line, criteria, savepath):
     bar.ax.tick_params(width=2.5, labelsize=16, length=7, direction='in')
 
     # vel
-    vmin = -300
-    vmax = 300
+    vmin = -450
+    vmax = 450
 
     ax = plt.subplot(3, 2, 3)
     im =  ax.imshow(mapp_out_vel, vmin=vmin, vmax=vmax, cmap=cmap, origin='lower')
@@ -818,7 +818,7 @@ def assign_comps_mapps_ALL(og, infile, line, criteria, savepath):
 
     # fwhm
     vmin = 0
-    vmax = 300
+    vmax = 450
 
     ax = plt.subplot(3, 2, 5)
     im =  ax.imshow(mapp_out_fwhm, vmin=vmin, vmax=vmax, cmap=cmap, origin='lower')

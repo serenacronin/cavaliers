@@ -957,13 +957,13 @@ def FitRoutine(FittingInfo, chunk_list):
 
 	for i in np.arange(x): # x-axis 
 
-		if (i != 249):
-			continue
+		# if (i != 249):
+		# 	continue
 
 		for j in np.arange(y): # y-axis
 
-			if (j != 148):
-				continue
+			# if (j != 148):
+			# 	continue
 	
 			# option for only working with a random set of pixels
 			if random_pix_only != False:

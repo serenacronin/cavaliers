@@ -1,9 +1,9 @@
 """
-Created on Wed Mar 15 2023
+Created on Mon June 6 2023
 
 @author: Serena A. Cronin
 
-This script will reorder the components of the two Gaussian fit.
+This script will reorder the components of the one system of lines fit.
 
 """
 # imports
@@ -30,7 +30,7 @@ def wavelength_to_velocity(wls, Vsys, restwl):
 	return vels - Vsys
 
 
-def reorder_components2(infile, outfile, infile_err, outfile_err):
+def reorder_components1(infile, outfile, infile_err, outfile_err):
 	
 	"""
 	This function reads in the parameter (infile) and error (infile_err) files of the two Gaussian component fits
@@ -43,20 +43,20 @@ def reorder_components2(infile, outfile, infile_err, outfile_err):
 	# params
 	##############################################################################
 	
-	# read in fits2
-	fits2 = pd.read_csv(infile)
+	# read in fits1
+	fits1 = pd.read_csv(infile)
 
 	# open a new file, add in the headers
-	f2 = open(outfile, "w")
-	f2.write('X,Y,RedChiSq,Amp1,Amp2,Amp3,Amp4,Amp5,Amp6,Amp7,Amp8,Amp9,Amp10,')
-	f2.write('Wvl1,Wvl2,Wvl3,Wvl4,Wvl5,Wvl6,Wvl7,Wvl8,Wvl9,Wvl10,')
-	f2.write('Sig1,Sig2,Sig3,Sig4,Sig5,Sig6,Sig7,Sig8,Sig9,Sig10\n')
+	f1 = open(outfile, "w")
+	f1.write('X,Y,RedChiSq,Amp1,Amp2,Amp3,Amp4,Amp5,')
+	f1.write('Wvl1,Wvl2,Wvl3,Wvl4,Wvl5,')
+	f1.write('Sig1,Sig2,Sig3,Sig4,Sig5\n')
 
 	# reorder the parameters based on wavelength
-	sort_index = np.array(np.argsort(fits2.iloc[:,13:23]))
-	wvl_arr = np.array(fits2.iloc[:,13:23])
-	amps_arr = np.array(fits2.iloc[:,3:13])
-	sigs_arr = np.array(fits2.iloc[:,23:33])
+	sort_index = np.array(np.argsort(fits1.iloc[:,8:12]))
+	wvl_arr = np.array(fits1.iloc[:,8:12])
+	amps_arr = np.array(fits1.iloc[:,3:8])
+	sigs_arr = np.array(fits1.iloc[:,12:17])
 
 	# sort the file based on the reordering above
 	for pix in tqdm(range(len(sort_index))):
@@ -65,21 +65,18 @@ def reorder_components2(infile, outfile, infile_err, outfile_err):
 		wvl_params = [wvl_arr[pix][i] for i in sort_index[pix]]
 		amps_params = [amps_arr[pix][i] for i in sort_index[pix]]
 		sigs_params = [sigs_arr[pix][i] for i in sort_index[pix]]
-		ordered_params2 = amps_params + wvl_params + sigs_params  # all sorted params
+		ordered_params1 = amps_params + wvl_params + sigs_params  # all sorted params
 
 		# write to a file (saves a TON of time rather than saving to memory)
-		f2.write('%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,'
-				'%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,'
-				'%s, %s, %s, %s, %s, %s, %s, %s, %s, %s\n' %
-				 (fits2['X'][pix], fits2['Y'][pix], fits2['RedChiSq'][pix],
-				 ordered_params2[0], ordered_params2[1], ordered_params2[2], ordered_params2[3], ordered_params2[4],
-				 ordered_params2[5], ordered_params2[6], ordered_params2[7], ordered_params2[8], ordered_params2[9],
-				 ordered_params2[10], ordered_params2[11], ordered_params2[12], ordered_params2[13], ordered_params2[14],
-				 ordered_params2[15], ordered_params2[16], ordered_params2[17], ordered_params2[18], ordered_params2[19],
-				 ordered_params2[20], ordered_params2[21], ordered_params2[22], ordered_params2[23], ordered_params2[24],
-				 ordered_params2[25], ordered_params2[26], ordered_params2[27], ordered_params2[28], ordered_params2[29]))
+		f1.write('%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,'
+				'%s, %s, %s, %s, %s\n' %
+				 (fits1['X'][pix], fits1['Y'][pix], fits1['RedChiSq'][pix],
+				 ordered_params1[0], ordered_params1[1], ordered_params1[2], ordered_params1[3], ordered_params1[4],
+				 ordered_params1[5], ordered_params1[6], ordered_params1[7], ordered_params1[8], ordered_params1[9],
+				 ordered_params1[10], ordered_params1[11], ordered_params1[12], ordered_params1[13], ordered_params1[14],
+				 ordered_params1[15], ordered_params1[16], ordered_params1[17]))
 
-	f2.close()
+	f1.close()
 
 	##############################################################################
 	# errors on the params
@@ -87,18 +84,18 @@ def reorder_components2(infile, outfile, infile_err, outfile_err):
 
 	print('Reordering component (errors)....')
 	# read in errs_fits2
-	fits2_err = pd.read_csv(infile_err)
+	fits1_err = pd.read_csv(infile_err)
 	
 	# open a new file, add in the headers
-	e2 = open(outfile_err, "w")
-	e2.write('X,Y,RedChiSq,Amp1,Amp2,Amp3,Amp4,Amp5,Amp6,Amp7,Amp8,Amp9,Amp10,')
-	e2.write('Wvl1,Wvl2,Wvl3,Wvl4,Wvl5,Wvl6,Wvl7,Wvl8,Wvl9,Wvl10,')
-	e2.write('Sig1,Sig2,Sig3,Sig4,Sig5,Sig6,Sig7,Sig8,Sig9,Sig10\n')
+	e1 = open(outfile_err, "w")
+	e1.write('X,Y,RedChiSq,Amp1,Amp2,Amp3,Amp4,Amp5,')
+	e1.write('Wvl1,Wvl2,Wvl3,Wvl4,Wvl5,')
+	e1.write('Sig1,Sig2,Sig3,Sig4,Sig5\n')
 
 	# use the new order from above: sort_index
-	wvl_arr = np.array(fits2_err.iloc[:,13:23])
-	amps_arr = np.array(fits2_err.iloc[:,3:13])
-	sigs_arr = np.array(fits2_err.iloc[:,23:33])
+	wvl_arr = np.array(fits1_err.iloc[:,8:12])
+	amps_arr = np.array(fits1_err.iloc[:,3:8])
+	sigs_arr = np.array(fits1_err.iloc[:,12:17])
 
 	# do the sorting
 	for pix in tqdm(range(len(sort_index))):
@@ -111,23 +108,21 @@ def reorder_components2(infile, outfile, infile_err, outfile_err):
 		ordered_params2 = amps_params + wvl_params + sigs_params  # all sorted errors on params
 
 		# write to a file (saves a TON of time rather than saving to memory)
-		e2.write('%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,'
+		e1.write('%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,'
 				'%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,'
 				'%s, %s, %s, %s, %s, %s, %s, %s, %s, %s\n' %
-				 (fits2_err['X'][pix], fits2_err['Y'][pix], fits2_err['RedChiSq'][pix],
-				ordered_params2[0], ordered_params2[1], ordered_params2[2], ordered_params2[3], ordered_params2[4],
-				 ordered_params2[5], ordered_params2[6], ordered_params2[7], ordered_params2[8], ordered_params2[9],
-				 ordered_params2[10], ordered_params2[11], ordered_params2[12], ordered_params2[13], ordered_params2[14],
-				 ordered_params2[15], ordered_params2[16], ordered_params2[17], ordered_params2[18], ordered_params2[19],
-				 ordered_params2[20], ordered_params2[21], ordered_params2[22], ordered_params2[23], ordered_params2[24],
-				 ordered_params2[25], ordered_params2[26], ordered_params2[27], ordered_params2[28], ordered_params2[29]))
+				 (fits1_err['X'][pix], fits1_err['Y'][pix], fits1_err['RedChiSq'][pix],
+				 ordered_params1[0], ordered_params1[1], ordered_params1[2], ordered_params1[3], ordered_params1[4],
+				 ordered_params1[5], ordered_params1[6], ordered_params1[7], ordered_params1[8], ordered_params1[9],
+				 ordered_params1[10], ordered_params1[11], ordered_params1[12], ordered_params1[13], ordered_params1[14],
+				 ordered_params1[15], ordered_params1[16], ordered_params1[17]))
 
-	e2.close()
+	e1.close()
 
 	return
 
 
-def add_velocities2(infile, err_infile, outfile, err_outfile, restwls, Vsys, i):
+def add_velocities1(infile, err_infile, outfile, err_outfile, restwls, Vsys, i):
 	
 	"""
 	This function converts to velocity the wavelengths of the two Gaussian component fits.
@@ -142,27 +137,17 @@ def add_velocities2(infile, err_infile, outfile, err_outfile, restwls, Vsys, i):
 
 	# make velocity columns
 	outputs_ordered['Vel1'] = wavelength_to_velocity(outputs_ordered['Wvl1'], Vsys, restwls[0]) / np.sin(i*np.pi/180)
-	outputs_ordered['Vel2'] = wavelength_to_velocity(outputs_ordered['Wvl2'], Vsys, restwls[0]) / np.sin(i*np.pi/180)
-	outputs_ordered['Vel3'] = wavelength_to_velocity(outputs_ordered['Wvl3'], Vsys, restwls[1]) / np.sin(i*np.pi/180)
-	outputs_ordered['Vel4'] = wavelength_to_velocity(outputs_ordered['Wvl4'], Vsys, restwls[1]) / np.sin(i*np.pi/180)
-	outputs_ordered['Vel5'] = wavelength_to_velocity(outputs_ordered['Wvl5'], Vsys, restwls[2]) / np.sin(i*np.pi/180)
-	outputs_ordered['Vel6'] = wavelength_to_velocity(outputs_ordered['Wvl6'], Vsys, restwls[2]) / np.sin(i*np.pi/180)
-	outputs_ordered['Vel7'] = wavelength_to_velocity(outputs_ordered['Wvl7'], Vsys, restwls[3]) / np.sin(i*np.pi/180)
-	outputs_ordered['Vel8'] = wavelength_to_velocity(outputs_ordered['Wvl8'], Vsys, restwls[3]) / np.sin(i*np.pi/180)
-	outputs_ordered['Vel9'] = wavelength_to_velocity(outputs_ordered['Wvl9'], Vsys, restwls[4]) / np.sin(i*np.pi/180)
-	outputs_ordered['Vel10'] = wavelength_to_velocity(outputs_ordered['Wvl10'], Vsys, restwls[4]) / np.sin(i*np.pi/180)
+	outputs_ordered['Vel2'] = wavelength_to_velocity(outputs_ordered['Wvl2'], Vsys, restwls[1]) / np.sin(i*np.pi/180)
+	outputs_ordered['Vel3'] = wavelength_to_velocity(outputs_ordered['Wvl3'], Vsys, restwls[2]) / np.sin(i*np.pi/180)
+	outputs_ordered['Vel4'] = wavelength_to_velocity(outputs_ordered['Wvl4'], Vsys, restwls[3]) / np.sin(i*np.pi/180)
+	outputs_ordered['Vel5'] = wavelength_to_velocity(outputs_ordered['Wvl5'], Vsys, restwls[4]) / np.sin(i*np.pi/180)
 
 	# make columns for sigma in velocity space
 	outputs_ordered['SigVel1'] = (3*10**5 * outputs_ordered['Sig1']) / restwls[0]
-	outputs_ordered['SigVel2'] = (3*10**5 * outputs_ordered['Sig2']) / restwls[0]
-	outputs_ordered['SigVel3'] = (3*10**5 * outputs_ordered['Sig3']) / restwls[1]
-	outputs_ordered['SigVel4'] = (3*10**5 * outputs_ordered['Sig4']) / restwls[1]
-	outputs_ordered['SigVel5'] = (3*10**5 * outputs_ordered['Sig5']) / restwls[2]
-	outputs_ordered['SigVel6'] = (3*10**5 * outputs_ordered['Sig6']) / restwls[2]
-	outputs_ordered['SigVel7'] = (3*10**5 * outputs_ordered['Sig7']) / restwls[3]
-	outputs_ordered['SigVel8'] = (3*10**5 * outputs_ordered['Sig8']) / restwls[3]
-	outputs_ordered['SigVel9'] = (3*10**5 * outputs_ordered['Sig9']) / restwls[4]
-	outputs_ordered['SigVel10'] = (3*10**5 * outputs_ordered['Sig10']) / restwls[4]
+	outputs_ordered['SigVel2'] = (3*10**5 * outputs_ordered['Sig2']) / restwls[1]
+	outputs_ordered['SigVel3'] = (3*10**5 * outputs_ordered['Sig3']) / restwls[2]
+	outputs_ordered['SigVel4'] = (3*10**5 * outputs_ordered['Sig4']) / restwls[3]
+	outputs_ordered['SigVel5'] = (3*10**5 * outputs_ordered['Sig5']) / restwls[4]
 
 	# output to file
 	# will overwrite the above but that's fine
