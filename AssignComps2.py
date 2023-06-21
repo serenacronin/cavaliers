@@ -15,6 +15,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from astropy.io import fits
 from tqdm import tqdm
+<<<<<<< HEAD
+=======
+# from velocity_conversions import *
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
 
 # set up future plots
 plt.rcParams['text.usetex'] = False
@@ -83,8 +87,13 @@ def which_fit2(infile, savepath):
         else:
             check1.append('PASS')
 
+<<<<<<< HEAD
         # is FWHM greater than ~2 * 450 km/s? (absolute value)
         if ((row['SigVel3'] > 1000) | (row['SigVel4'] > 1000)):
+=======
+        # is FWHM greater than ~450 km/s? (absolute value)
+        if ((((3*10**5 * row['Sig3']*2.355) / 6562.801) > 450) | (((3*10**5 * row['Sig4']*2.355) / 6562.801) > 450)):
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
             check2.append('FAIL')
         else:
             check2.append('PASS')
@@ -97,11 +106,19 @@ def which_fit2(infile, savepath):
             check3.append('PASS')
 
         # are the velocities unphysical?
+<<<<<<< HEAD
         # i.e., greater than ~600 km/s (absolute value)
         # vel3 = wavelength_to_velocity(row['Wvl3'], Vsys=243., restwl=6562.801)
         # vel4 = wavelength_to_velocity(row['Wvl4'], Vsys=243., restwl=6562.801)
 
         if (np.abs(row['Vel3']) > 600) | (np.abs(row['Vel4']) > 600):
+=======
+        # i.e., greater than ~450 km/s (absolute value)
+        vel3 = wavelength_to_velocity(row['Wvl3'], Vsys=243., restwl=6562.801)
+        vel4 = wavelength_to_velocity(row['Wvl4'], Vsys=243., restwl=6562.801)
+
+        if (np.abs(vel3) > 450) | (np.abs(vel4) > 450):
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
             check4.append('FAIL')
         else:
             check4.append('PASS')
@@ -191,13 +208,21 @@ def SigToNoise(infile, infile_err, savepath, plot, og):
         ax.set_ylabel('Dec.', fontsize=20)
         bar = plt.colorbar(im, fraction=0.046)
         bar.ax.tick_params(width=2.5, labelsize=16, length=7, direction='in')
+<<<<<<< HEAD
         plt.savefig('%splots/fits2_SigToNoise.png' % savepath, dpi=200)
+=======
+        plt.savefig('%s/plots/fits2_SigToNoise.png' % savepath, dpi=200)
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
 
     return
 
 
 # assign the components and create maps!
+<<<<<<< HEAD
 def assign_comps_mapps(og, infile, outflow, disk, line, criteria, savepath, plot_NII_Halpha):
+=======
+def assign_comps_mapps(og, infile, outflow, disk, line, criteria, savepath, ratio_thresh, plot_NII_Halpha):
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
 
     # get info of original data
     hdu = fits.open(og)[1]
@@ -216,19 +241,33 @@ def assign_comps_mapps(og, infile, outflow, disk, line, criteria, savepath, plot
         
         amp_blue = 'Amp3'
         vel_blue = 'Vel3'
+<<<<<<< HEAD
         sig_blue = 'SigVel3'
         amp_red = 'Amp4'
         vel_red = 'Vel4'
         sig_red = 'SigVel4'
+=======
+        sig_blue = 'Sig3'
+        amp_red = 'Amp4'
+        vel_red = 'Vel4'
+        sig_red = 'Sig4'
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
     
     if line == 'NIIb':
         
         amp_blue = 'Amp5'
         vel_blue = 'Vel5'
+<<<<<<< HEAD
         sig_blue = 'SigVel5'
         amp_red = 'Amp6'
         vel_red = 'Vel6'
         sig_red = 'SigVel6'
+=======
+        sig_blue = 'Sig5'
+        amp_red = 'Amp6'
+        vel_red = 'Vel6'
+        sig_red = 'Sig6'
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
 
     if criteria == 'NII_Halpha_Ratio':
         blue_crit = 'CHECK_BLUE_NII_Halpha_Ratio'
@@ -261,6 +300,7 @@ def assign_comps_mapps(og, infile, outflow, disk, line, criteria, savepath, plot
         if (row['%s' % blue_crit] == 'outflow') & (row['%s' % red_crit] == 'disk'):
             mapp_out_amp[int(row['Y']), int(row['X'])] = row[amp_blue]
             mapp_out_vel[int(row['Y']), int(row['X'])] = row[vel_blue]
+<<<<<<< HEAD
             mapp_out_fwhm[int(row['Y']), int(row['X'])] = np.sqrt((row[sig_blue] * 2.355)**2 - 100**2)
             mapp_disk_amp[int(row['Y']), int(row['X'])] = row[amp_red]
             mapp_disk_vel[int(row['Y']), int(row['X'])] = row[vel_red]
@@ -272,6 +312,19 @@ def assign_comps_mapps(og, infile, outflow, disk, line, criteria, savepath, plot
             mapp_disk_amp[int(row['Y']), int(row['X'])] = row[amp_blue]
             mapp_disk_vel[int(row['Y']), int(row['X'])] = row[vel_blue]
             mapp_disk_fwhm[int(row['Y']), int(row['X'])] = np.sqrt((row[sig_blue] * 2.355)**2 - 100**2)
+=======
+            mapp_out_fwhm[int(row['Y']), int(row['X'])] = (3*10**5 * row[sig_blue] * 2.355) / 6562.801 # FWHM
+            mapp_disk_amp[int(row['Y']), int(row['X'])] = row[amp_red]
+            mapp_disk_vel[int(row['Y']), int(row['X'])] = row[vel_red]
+            mapp_disk_fwhm[int(row['Y']), int(row['X'])] = (3*10**5 * row[sig_red] * 2.355) / 6562.801 # FWHM
+        elif (row['%s' % blue_crit] == 'disk') & (row['%s' % red_crit] == 'outflow'):
+            mapp_out_amp[int(row['Y']), int(row['X'])] = row[amp_red]
+            mapp_out_vel[int(row['Y']), int(row['X'])] = row[vel_red]
+            mapp_out_fwhm[int(row['Y']), int(row['X'])] = (3*10**5 * row[sig_red] * 2.355) / 6562.801 # FWHM
+            mapp_disk_amp[int(row['Y']), int(row['X'])] = row[amp_blue]
+            mapp_disk_vel[int(row['Y']), int(row['X'])] = row[vel_blue]
+            mapp_disk_fwhm[int(row['Y']), int(row['X'])] = (3*10**5 * row[sig_blue] * 2.355) / 6562.801 # FWHM
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
         else:
             mapp_out_amp[int(row['Y']), int(row['X'])] = np.nan
             mapp_out_vel[int(row['Y']), int(row['X'])] = np.nan
@@ -303,7 +356,11 @@ def assign_comps_mapps(og, infile, outflow, disk, line, criteria, savepath, plot
 
     if criteria == 'NII_Halpha_Ratio':
         vmin = 0
+<<<<<<< HEAD
         vmax = 5
+=======
+        vmax = 3
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
     if criteria == 'Velocities':
         vmin = -450
         vmax = 450
@@ -319,6 +376,14 @@ def assign_comps_mapps(og, infile, outflow, disk, line, criteria, savepath, plot
     bar = plt.colorbar(im, fraction=0.046)
 
     if criteria == 'NII_Halpha_Ratio':
+<<<<<<< HEAD
+=======
+        bar.ax.axhline(y=ratio_thresh, c='black', lw=6)
+        bar.ax.axhline(y=ratio_thresh, c='w', lw=2)
+        original_ticks = list(bar.get_ticks())
+        bar.set_ticks(original_ticks + [ratio_thresh])
+        bar.set_ticklabels(original_ticks + ['med.'])
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
         bar.set_label('[N II]/H-alpha', fontsize=18)
     elif criteria == 'Velocities':
         bar.set_label('velocity [km/s]', fontsize=18)
@@ -326,7 +391,11 @@ def assign_comps_mapps(og, infile, outflow, disk, line, criteria, savepath, plot
 
     # amplitude
     vmin = 0
+<<<<<<< HEAD
     vmax = 500
+=======
+    vmax = 2000
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
 
     ax = plt.subplot(4, 2, 3)
     im =  ax.imshow(mapp_out_amp, vmin=vmin, vmax=vmax, cmap=cmap, origin='lower')
@@ -351,7 +420,11 @@ def assign_comps_mapps(og, infile, outflow, disk, line, criteria, savepath, plot
     bar.ax.tick_params(width=2.5, labelsize=16, length=7, direction='in')
 
     # FWHM
+<<<<<<< HEAD
     vmin = 0
+=======
+    vmin = -450
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
     vmax = 450
 
     ax = plt.subplot(4, 2, 7)
@@ -360,14 +433,25 @@ def assign_comps_mapps(og, infile, outflow, disk, line, criteria, savepath, plot
     ax = plt.subplot(4, 2, 8)
     im =  ax.imshow(mapp_disk_fwhm, vmin=vmin, vmax=vmax, cmap=cmap, origin='lower')
     bar = plt.colorbar(im, fraction=0.046)
+<<<<<<< HEAD
     bar.set_label('fwhm [km/s]', fontsize=18)
     bar.ax.tick_params(width=2.5, labelsize=16, length=7, direction='in')
 
     plt.savefig('%splots/fits2_%s_%s.png' % (savepath, line, criteria), dpi=200)
+=======
+    bar.set_label('fwhm (Angstrom)', fontsize=18)
+    bar.ax.tick_params(width=2.5, labelsize=16, length=7, direction='in')
+
+    plt.savefig('%s/plots/fits2_%s_%s.png' % (savepath, line, criteria), dpi=200)
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
 
     return
 
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
 def CHECK_NII_Halpha_Ratio2(og, infile, infile_err,
                             take_ratio=False, assign_comps=False, 
                             plot=False, savepath=False, line_to_plot=False):
@@ -399,6 +483,7 @@ def CHECK_NII_Halpha_Ratio2(og, infile, infile_err,
             
             try:
                 # calculate the ratio
+<<<<<<< HEAD
                 ratB = float(row['Amp5'])/float(row['Amp3'])
                 ratB_err = Mult_Div_StdErr(float(row['Amp5']), float(row['Amp3']), 
                                            float(err['Amp5']), float(err['Amp3']))
@@ -422,6 +507,25 @@ def CHECK_NII_Halpha_Ratio2(og, infile, infile_err,
     
         # print(infile)
         # infile = infile.drop(['BlueCompRatio', 'RedCompRatio']) # ugh
+=======
+                blue_rat.append(row['Amp5']/row['Amp3'])
+
+                # calculate the error
+                z_err = Mult_Div_StdErr(row['Amp5'], row['Amp3'], err['Amp5'], err['Amp3'])
+                blue_rat_err.append(z_err)
+            except:
+                blue_rat.append('div0')
+                blue_rat_err.append('div0')
+                
+            try:
+                red_rat.append(row['Amp6']/row['Amp4'])
+                z_err = Mult_Div_StdErr(row['Amp6'], row['Amp4'], err['Amp6'], err['Amp4'])
+                red_rat_err.append(z_err)
+            except:
+                red_rat.append('div0')
+                red_rat_err.append('div0')
+            
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
         infile['BlueCompRatio'] = blue_rat
         infile['RedCompRatio'] = red_rat
 
@@ -431,7 +535,10 @@ def CHECK_NII_Halpha_Ratio2(og, infile, infile_err,
         infile.to_csv('%sfits2_NII_Halpha_Ratio.txt' % savepath, index=False)
         infile_err.to_csv('%sfits2_err_NII_Halpha_Ratio.txt' % savepath, index=False)
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
 ##############################################################################
 # component assignment
 ##############################################################################
@@ -440,18 +547,27 @@ def CHECK_NII_Halpha_Ratio2(og, infile, infile_err,
         print('Assigning components based on ratio....')
 
         infile = pd.read_csv('%sfits2_NII_Halpha_Ratio.txt' % savepath)
+<<<<<<< HEAD
         infile_err = pd.read_csv('%sfits2_NII_Halpha_Ratio.txt' % savepath)
+=======
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
         blue_rat = infile['BlueCompRatio']
         red_rat = infile['RedCompRatio']
 
         # take the median of the ratios to get a threshold
+<<<<<<< HEAD
         # ratios = np.concatenate((blue_rat, red_rat))
         # ratio_thresh = np.median([float(i) for i in ratios if i != 'div0'])
+=======
+        ratios = np.concatenate((blue_rat, red_rat))
+        ratio_thresh = np.median([float(i) for i in ratios if i != 'div0'])
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
         
         # assign components
         blue = []
         red = []
         for index, row in tqdm(infile.iterrows()):
+<<<<<<< HEAD
             err_df = infile_err[(infile_err['X'] == row['X']) & (infile_err['Y'] == row['Y'])]  # grab errors
 
             if row['RedCompRatio'] == 'div0':
@@ -502,6 +618,29 @@ def CHECK_NII_Halpha_Ratio2(og, infile, infile_err,
             #     else:
             #         blue.append('und')
 
+=======
+
+            # if there's any divide by 0 errors, just make both components undetermined
+            # if the component ratios are within 20% of each other, make that undetermined
+            # if both components are less than the ratio threshold, make that undetermined
+            # otherwise, compare the two components
+            if (row['RedCompRatio'] == 'div0') | (row['BlueCompRatio'] == 'div0'):
+                blue.append('und')
+                red.append('und')
+            elif np.abs(float(row['RedCompRatio']) - float(row['BlueCompRatio'])) < 0.2:
+                blue.append('und')
+                red.append('und')
+            # elif (float(row['RedCompRatio']) < ratio_thresh) & (float(row['BlueCompRatio'])) < ratio_thresh:
+            #     blue.append('und')
+            #     red.append('und')
+            elif float(row['BlueCompRatio']) > float(row['RedCompRatio']):
+                blue.append('outflow')
+                red.append('disk')
+            elif float(row['BlueCompRatio']) < float(row['RedCompRatio']):
+                red.append('outflow')
+                blue.append('disk')
+        
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
         infile['CHECK_BLUE_NII_Halpha_Ratio'] = blue
         infile['CHECK_RED_NII_Halpha_Ratio'] = red
         infile.to_csv('%sfits2_NII_Halpha_Ratio.txt' % savepath, index=False)
@@ -549,7 +688,11 @@ def CHECK_NII_Halpha_Ratio2(og, infile, infile_err,
 
         # plot the component assignment!
         assign_comps_mapps(og, infile, outflow, disk, line=line_to_plot, criteria='NII_Halpha_Ratio',
+<<<<<<< HEAD
                            savepath=savepath, plot_NII_Halpha=False)
+=======
+                           savepath=savepath, ratio_thresh=ratio_thresh, plot_NII_Halpha=False)
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
     
     return
 
@@ -576,6 +719,7 @@ def CHECK_Velocities2(og, infile, diskmap, assign_comps, savepath, plot=False, l
 
             # use H-alpha velocities
 
+<<<<<<< HEAD
             # make an array that spans the width of the line
             # due to instrumental resolution and the error on the line
             # TODO: add errors
@@ -596,6 +740,18 @@ def CHECK_Velocities2(og, infile, diskmap, assign_comps, savepath, plot=False, l
             if (np.any(lineR > np.min(diskmap))) & (np.any(lineR < np.max(diskmap))):
                 red.append('disk')
             elif (np.any(lineR < np.min(diskmap))) | (np.any(lineR > np.max(diskmap))):
+=======
+            # blueshifted component
+            if (float(row['Vel3']) > np.min(diskmap)) & (float(row['Vel3']) < np.max(diskmap)):
+                blue.append('disk')
+            elif (float(row['Vel3']) < np.min(diskmap)) | (float(row['Vel3']) > np.max(diskmap)):
+                blue.append('outflow')
+
+            # redshifted component
+            if (float(row['Vel4']) > np.min(diskmap)) & (float(row['Vel4']) < np.max(diskmap)):
+                red.append('disk')
+            elif (float(row['Vel4']) < np.min(diskmap)) | (float(row['Vel4']) > np.max(diskmap)):
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
                 red.append('outflow')
 
         infile['CHECK_BLUE_Velocities'] = blue
@@ -647,7 +803,11 @@ def CHECK_Velocities2(og, infile, diskmap, assign_comps, savepath, plot=False, l
 
         # plot the component assignment!
         assign_comps_mapps(og, infile, outflow, disk, line=line_to_plot, criteria='Velocities',
+<<<<<<< HEAD
                            savepath=savepath, plot_NII_Halpha=False)
+=======
+                           savepath=savepath, ratio_thresh=False, plot_NII_Halpha=False)
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
         
     if plot_NII_Halpha == True:
 
@@ -661,6 +821,7 @@ def CHECK_Velocities2(og, infile, diskmap, assign_comps, savepath, plot=False, l
         # do the maps for both NIIb and Halpha
         NIIb_out_amp, _, _, NIIb_disk_amp, _, _ \
         = assign_comps_mapps(og, infile, outflow, disk, line='NIIb', criteria='Velocities',
+<<<<<<< HEAD
                         savepath=savepath, plot_NII_Halpha=plot_NII_Halpha)
         
         Halpha_out_amp, _, _, Halpha_disk_amp, _, _ \
@@ -671,6 +832,22 @@ def CHECK_Velocities2(og, infile, diskmap, assign_comps, savepath, plot=False, l
         vmax = 5
         cmap = 'rainbow'
 
+=======
+                        savepath=savepath, ratio_thresh=ratio_thresh, plot_NII_Halpha=plot_NII_Halpha)
+        
+        Halpha_out_amp, _, _, Halpha_disk_amp, _, _ \
+        = assign_comps_mapps(og, infile, outflow, disk, line='Halpha', criteria='Velocities',
+                        savepath=savepath, ratio_thresh=ratio_thresh, plot_NII_Halpha=plot_NII_Halpha)
+
+        vmin = 0
+        vmax = 3
+        cmap = 'rainbow'
+
+        ratios = np.concatenate((NIIb_out_amp / Halpha_out_amp, NIIb_disk_amp / Halpha_disk_amp))
+        ratio_thresh = np.median(ratios[np.isfinite(ratios)])
+        print('Median ratio =', np.round(ratio_thresh, 2))
+
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
         fig = plt.figure(figsize=(11,6))
         fig.suptitle('[NII/Halpha] (Criteria: Velocities)', fontsize=25)
         ax = plt.subplot(1, 2, 1)
@@ -683,6 +860,7 @@ def CHECK_Velocities2(og, infile, diskmap, assign_comps, savepath, plot=False, l
         bar = plt.colorbar(im, fraction=0.046)
         bar.set_label('[N II]/H-alpha', fontsize=18)
         bar.ax.tick_params(width=2.5, labelsize=16, length=7, direction='in')
+<<<<<<< HEAD
 
         plt.savefig('%splots/fits2_NII_Halpha_VELOCITIES.png' % savepath, dpi=200)
 
@@ -692,6 +870,16 @@ def CHECK_Velocities2(og, infile, diskmap, assign_comps, savepath, plot=False, l
         disk = NIIb_disk_amp / Halpha_disk_amp
         print('Mean disk:', np.mean(disk[np.isfinite(disk)]))
 
+=======
+        bar.ax.axhline(y=ratio_thresh, c='black', lw=6)
+        bar.ax.axhline(y=ratio_thresh, c='w', lw=2)
+        original_ticks = list(bar.get_ticks())
+        bar.set_ticks(original_ticks + [ratio_thresh])
+        bar.set_ticklabels(original_ticks + ['med.'])
+
+        plt.savefig('%splots/fits2_NII_Halpha_VELOCITIES.png' % savepath, dpi=200)
+
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
     return
 
 
@@ -723,18 +911,32 @@ def assign_comps_mapps_ALL(og, infile, line, criteria, savepath):
     if line == 'Halpha':
         amp_blue = 'Amp3'
         vel_blue = 'Vel3'
+<<<<<<< HEAD
         sig_blue = 'SigVel3'
         amp_red = 'Amp4'
         vel_red = 'Vel4'
         sig_red = 'SigVel4'
+=======
+        sig_blue = 'Sig3'
+        amp_red = 'Amp4'
+        vel_red = 'Vel4'
+        sig_red = 'Sig4'
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
     
     if line == 'NIIb':
         amp_blue = 'Amp5'
         vel_blue = 'Vel5'
+<<<<<<< HEAD
         sig_blue = 'SigVel5'
         amp_red = 'Amp6'
         vel_red = 'Vel6'
         sig_red = 'SigVel6'
+=======
+        sig_blue = 'Sig5'
+        amp_red = 'Amp6'
+        vel_red = 'Vel6'
+        sig_red = 'Sig6'
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
 
     for index, row in infile.iterrows():
 
@@ -754,6 +956,7 @@ def assign_comps_mapps_ALL(og, infile, line, criteria, savepath):
         if (criteria_out in row['CHECK_BLUE_Velocities_Ratio']) & (criteria_disk in row['CHECK_RED_Velocities_Ratio']):
             mapp_out_amp[int(row['Y']), int(row['X'])] = row[amp_blue]
             mapp_out_vel[int(row['Y']), int(row['X'])] = row[vel_blue]
+<<<<<<< HEAD
             mapp_out_fwhm[int(row['Y']), int(row['X'])] = np.sqrt((row[sig_blue] * 2.355)**2 - 100**2)
             mapp_disk_amp[int(row['Y']), int(row['X'])] = row[amp_red]
             mapp_disk_vel[int(row['Y']), int(row['X'])] = row[vel_red]
@@ -765,6 +968,19 @@ def assign_comps_mapps_ALL(og, infile, line, criteria, savepath):
             mapp_disk_amp[int(row['Y']), int(row['X'])] = row[amp_blue]
             mapp_disk_vel[int(row['Y']), int(row['X'])] = row[vel_blue]
             mapp_disk_fwhm[int(row['Y']), int(row['X'])] = np.sqrt((row[sig_blue] * 2.355)**2 - 100**2)
+=======
+            mapp_out_fwhm[int(row['Y']), int(row['X'])] = row[sig_blue] * 2.355  # FWHM
+            mapp_disk_amp[int(row['Y']), int(row['X'])] = row[amp_red]
+            mapp_disk_vel[int(row['Y']), int(row['X'])] = row[vel_red]
+            mapp_disk_fwhm[int(row['Y']), int(row['X'])] = row[sig_red] * 2.355  # FWHM
+        elif (criteria_disk in row['CHECK_BLUE_Velocities_Ratio']) & (criteria_out in row['CHECK_RED_Velocities_Ratio']):
+            mapp_out_amp[int(row['Y']), int(row['X'])] = row[amp_red]
+            mapp_out_vel[int(row['Y']), int(row['X'])] = row[vel_red]
+            mapp_out_fwhm[int(row['Y']), int(row['X'])] = row[sig_red] * 2.355  # FWHM
+            mapp_disk_amp[int(row['Y']), int(row['X'])] = row[amp_blue]
+            mapp_disk_vel[int(row['Y']), int(row['X'])] = row[vel_blue]
+            mapp_disk_fwhm[int(row['Y']), int(row['X'])] = row[sig_blue] * 2.355  # FWHM
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
         else:
             mapp_out_amp[int(row['Y']), int(row['X'])] = np.nan
             mapp_out_vel[int(row['Y']), int(row['X'])] = np.nan
@@ -788,7 +1004,11 @@ def assign_comps_mapps_ALL(og, infile, line, criteria, savepath):
 
     # amp
     vmin = 0
+<<<<<<< HEAD
     vmax = 500
+=======
+    vmax = 2000
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
 
     ax = plt.subplot(3, 2, 1)
     im =  ax.imshow(mapp_out_amp, vmin=vmin, vmax=vmax, cmap=cmap, origin='lower')
@@ -817,7 +1037,11 @@ def assign_comps_mapps_ALL(og, infile, line, criteria, savepath):
     bar.ax.tick_params(width=2.5, labelsize=16, length=7, direction='in')
 
     # fwhm
+<<<<<<< HEAD
     vmin = 0
+=======
+    vmin = -450
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
     vmax = 450
 
     ax = plt.subplot(3, 2, 5)
@@ -851,8 +1075,11 @@ def CHECK_Velocities_Ratio(og, infile, savepath, plot, line_to_plot):
     ratio = pd.read_csv('%sfits2_NII_Halpha_Ratio.txt' % savepath)
     vels = pd.read_csv('%sfits2_Velocities.txt' % savepath)
 
+<<<<<<< HEAD
     infile['BlueCompRatio'] = ratio['BlueCompRatio']
     infile['RedCompRatio'] = ratio['RedCompRatio']
+=======
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
     infile['CHECK_BLUE_Velocities'] = vels['CHECK_BLUE_Velocities']
     infile['CHECK_RED_Velocities'] = vels['CHECK_RED_Velocities']
     infile['CHECK_BLUE_NII_Halpha_Ratio'] = ratio['CHECK_BLUE_NII_Halpha_Ratio']

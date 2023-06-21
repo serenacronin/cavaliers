@@ -74,7 +74,11 @@ def secax_fxn_inverse(xvals):
 
 # variables
 filename = '../ngc253/data/ADP.2018-11-22T21_29_46.157.fits'
+<<<<<<< HEAD
 savepath = '../ngc253/testFeb13/'
+=======
+savepath = '../ngc253/testFeb8/'
+>>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
 outfile_dirty = 'ngc253_se_halpha_vel_model_dirty.fits'  # map before cleaning
 outfile_method = 'ngc253_se_halpha_vel_model_method.png'  # how the map was cleaned
 outfile_smooth = 'ngc253_se_halpha_vel_model_smooth.fits'  # map after cleaning
