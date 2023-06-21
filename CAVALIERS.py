@@ -957,20 +957,12 @@ def FitRoutine(FittingInfo, chunk_list):
 
 	for i in np.arange(x): # x-axis 
 
-<<<<<<< HEAD
 		# if (i != 249):
-=======
-		# if (i != 19):
->>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
 		# 	continue
 
 		for j in np.arange(y): # y-axis
 
-<<<<<<< HEAD
 			# if (j != 148):
-=======
-			# if (j != 16):
->>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
 			# 	continue
 	
 			# option for only working with a random set of pixels
@@ -1172,7 +1164,6 @@ def FitRoutine(FittingInfo, chunk_list):
 				# FIXME: generalize this		
 				chans_ind = np.argwhere(((np.array(chunk.spectral_axis) > 6525) & (np.array(chunk.spectral_axis) < 6620)) |
 						((np.array(chunk.spectral_axis) > 6700) & (np.array(chunk.spectral_axis) < 6750)))
-<<<<<<< HEAD
 				
 				# grab the channels we want from the spectrum itself and our model
 				chans_spec = np.array(spectrum)[chans_ind]
@@ -1314,8 +1305,6 @@ def FitRoutine(FittingInfo, chunk_list):
 				redchisq3 = round(red_chisq(chans_spec, chans_model3, 
 					num_params=len(amps3_list)*3, err=errs3, 
 					free_params=free_params3),4)
-=======
->>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
 				
 				# grab the channels we want from the spectrum itself and our model
 				chans_spec = np.array(spectrum)[chans_ind]
@@ -1328,150 +1317,10 @@ def FitRoutine(FittingInfo, chunk_list):
 				# option to print out fits
 				if (save_fits != False) & (count % save_fits == 0):						
 						# print the fit
-<<<<<<< HEAD
 						plot_one_fit(i, j, spec3, redchisq3, 
 									savepath = '%s/fits3' % savepath, 
 									xmin=6500, xmax=6800,
 									ymax=max(spectrum), fluxnorm=1e-20,
-=======
-						plot_one_fit(i, j, spec2, redchisq2, 
-									savepath = '%sfits2' % savepath, 
-									xmin=6500, xmax=6800,
-									ymax=max(spectrum), fluxnorm=1e-20,
-									input_params = total_guesses2)
-
-				# save parameters to file
-				with open("%sfits2.txt" % savepath, "a") as f2:
-					f2.write('%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,'
-	      					'%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,'
-	      					'%s, %s, %s, %s, %s, %s, %s, %s, %s, %s\n' %
-							(i, j, redchisq2,
-							params2[0], params2[3], params2[6], params2[9], params2[12],
-	     					params2[15], params2[18], params2[21], params2[24], params2[27],
-						    params2[1], params2[4], params2[7], params2[10], params2[13],
-							params2[16], params2[19], params2[22], params2[25], params2[28],
-	     					params2[2], params2[5], params2[8], params2[11], params2[14],
-						    params2[17], params2[20], params2[23], params2[26], params2[29]))
-				f2.close()
-
-
-				# save errors on parameters to file
-				with open("%sfits2_err.txt" % savepath, "a") as e2:
-					e2.write('%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,'
-	      					'%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,'
-	      					'%s, %s, %s, %s, %s, %s, %s, %s, %s, %s\n' %
-							(i, j, redchisq2,
-							err_params2[0], err_params2[3], err_params2[6], err_params2[9], err_params2[12],
-	     					err_params2[15], err_params2[18], err_params2[21], err_params2[24], err_params2[27],
-						    err_params2[1], err_params2[4], err_params2[7], err_params2[10], err_params2[13],
-							err_params2[16], err_params2[19], err_params2[22], err_params2[25], err_params2[28],
-	     					err_params2[2], err_params2[5], err_params2[8], err_params2[11], err_params2[14],
-						    err_params2[17], err_params2[20], err_params2[23], err_params2[26], err_params2[29]))
-				e2.close()
-						
-#################################################################################################################### 
-# THREE COMPONENT FIT
-####################################################################################################################
-			
-			# do we want to to fit with 3 Gaussians?
-			if fit3 == True:
-				
-				## TODO: make generalized
-				# if we are multiprocessing, make sure we are
-				# working with the correct chunk of guesses
-				if multiprocess != 1:
-					guesses3 = [guesses3[q][chunk_indices[0]:chunk_indices[1], 0:438] 
-									if type(guesses3[q]) == np.ndarray 
-									else guesses3[q] 
-									for q in range(len(guesses3))]
-					limits3 = [limits3[q][chunk_indices[0]:chunk_indices[1], 0:438] 
-									if type(limits3[q]) == np.ndarray 
-									else limits3[q] 
-									for q in range(len(limits3))]
-					ties3 = [ties3[q][chunk_indices[0]:chunk_indices[1], 0:438] 
-									if type(ties3[q]) == np.ndarray 
-									else ties3[q] 
-									for q in range(len(ties3))]
-				
-				# grab specific pixel value from the array
-				total_guesses3 = [guesses3[q][j,i] 
-									if type(guesses3[q]) == np.ndarray 
-									else guesses3[q] 
-									for q in range(len(guesses3))]
-				
-				total_limits3 =  [(limits3[q][0][j,i], limits3[q][1][j,i]) 
-										if type(limits3[q][0]) == np.ndarray 
-										else limits3[q] 
-										for q in range(len(limits3))]
-				
-				# if the model is nan, then we gotta skip the pixel
-				if np.isfinite(total_guesses3[1]) == False:
-					if chunk_num == 2 or multiprocess == 1: pbar.update(1)
-					count+=1
-					continue
-
-				# grab the spectrum
-				spec3 = pyspeckit.Spectrum(data=spectrum, xarr=np.linspace(minval, maxval, 
-											len(spectrum)))
-
-				# perform the fit
-				spec3.specfit.multifit(fittype='gaussian',
-										guesses = total_guesses3, 
-										limits = total_limits3,
-										limited = limited3,
-										# tied = ties2[j][i],
-										tied = ties3,
-										annotate = False)
-				spec3.measure(fluxnorm = 1e-20) # TODO: generalize
-				
-				# get errors for the reduced chi square
-				errs3 = compute_rms(x_axis, spectrum, continuum_limits[0], 
-									continuum_limits[1])
-				
-				# get the fit params
-				amps3_list = []
-				centers3_list = []
-				widths3_list = []
-				for line in spec3.measurements.lines.keys():
-					amps3_list.append(round(spec3.measurements.lines[line]['amp']/(1e-20),4))
-					centers3_list.append(round(spec3.measurements.lines[line]['pos'],4))
-					widths3_list.append(round(spec3.measurements.lines[line]['fwhm']/2.355,4))
-
-				# grab the error on each parameter
-				err_params3 = [round(e,4) for e in spec3.specfit.parinfo.errors]
-
-				# save the parameters
-				params3 = [par for sublist in zip(amps3_list, centers3_list, widths3_list)
-							for par in sublist]
-
-				# calculate reduced chi-square; first add up each Gaussian
-				components3 = [one_gaussian(np.array(chunk.spectral_axis), 
-								amps3_list[i], centers3_list[i], widths3_list[i]) 
-								for i in np.arange(len(amps3_list))]
-				model3 = sum(components3)
-				
-				# what we want is to do the reduced chi square only over the range of emission lines
-				# bc we have such a long baseline between emission lines
-				# FIXME: generalize this		
-				chans_ind = np.argwhere(((np.array(chunk.spectral_axis) > 6525) & (np.array(chunk.spectral_axis) < 6620)) |
-						((np.array(chunk.spectral_axis) > 6700) & (np.array(chunk.spectral_axis) < 6750)))
-				
-				# grab the channels we want from the spectrum itself and our model
-				chans_spec = np.array(spectrum)[chans_ind]
-				chans_model3 = model3[chans_ind]
-
-				redchisq3 = round(red_chisq(chans_spec, chans_model3, 
-					num_params=len(amps3_list)*3, err=errs3, 
-					free_params=free_params3),4)
-				
-				# option to print out fits
-				if (save_fits != False) & (count % save_fits == 0):						
-						# print the fit
-						plot_one_fit(i, j, spec3, redchisq3, 
-									savepath = '%s/fits3' % savepath, 
-									xmin=6500, xmax=6800,
-									ymax=max(spectrum), fluxnorm=1e-20,
->>>>>>> df13152f2df5bd0f59d76430f4a68ed75ffa925f
 									input_params = total_guesses3)
 						
 				# save parameters to file
