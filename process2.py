@@ -1,5 +1,6 @@
 """
-Created on Wed Mar 15 2023
+(Original Wed Mar 15 2023)
+Created on Thurs June 22 2023
 
 @author: Serena A. Cronin
 
@@ -13,8 +14,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from astropy.io import fits
-from AssignComps2 import *
-from ReorderComps2 import *
+from reorder2 import *
+from assign2 import *
 
 # set up future plots
 plt.rcParams['text.usetex'] = False
