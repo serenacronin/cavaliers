@@ -13,6 +13,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from astropy.io import fits
 from tqdm import tqdm
+from routine import CreateCube, compute_rms
 
 ##############################################################################
 # FUNCTIONS
@@ -207,8 +208,6 @@ def true_errors(infile, err_infile, outfile, err_outfile):
 	"""
 
 	print('Calculating true errors....')
-	 
-	from CAVALIERS import CreateCube, compute_rms
 
 	filename = '../ngc253/data/ADP.2018-11-22T21_29_46.157.fits'
 	infile = pd.read_csv(infile, delimiter=',', index_col=False)
@@ -223,7 +222,7 @@ def true_errors(infile, err_infile, outfile, err_outfile):
 	ContLower2 = 6700
 
 	cube = CreateCube(filename, SlabLower, SlabUpper, ContLower1, ContUpper1,
-					ContLower2, ContUpper2, Region=False)
+					ContLower2, ContUpper2)
 
 	z, y, x = cube.shape
 
@@ -297,9 +296,9 @@ def flux_map2(og, infile, outfile1, outfile2, line):
 	mapp_red[np.isnan(og_data[1])] = np.nan # [0] has some nans within
 
 	# create fits files to store maps
-	hdu2_b = fits.PrimaryHDU(mapp_blue)
-	hdu2_r = fits.PrimaryHDU(mapp_red)   
-	hdu2_b.writeto(outfile1, overwrite=True)
-	hdu2_r.writeto(outfile2, overwrite=True)
+	hdu_b = fits.PrimaryHDU(mapp_blue)
+	hdu_r = fits.PrimaryHDU(mapp_red)   
+	hdu_b.writeto(outfile1, overwrite=True)
+	hdu_r.writeto(outfile2, overwrite=True)
 		
 	return

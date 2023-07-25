@@ -54,14 +54,14 @@ def Mult_Div_StdErr(x, y, dx, dy):
     return np.sqrt((dx/x)**2 + (dy/y)**2)
 
 
-# does the two Gaussian component fit work?
-def which_fit2(infile, savepath):
+# does the two Gaussian component fit work physically?
+def physical_fit2(infile, savepath):
 
     """
     This function determines if the two Gaussian fit is reasonable to use.
     There is an option to make a map of which pixels have "failed" two Gaussian fits.
     """
-    print('Checking if the fits passed....')
+    print('Checking if the fits are physical....')
 
     # read in file
     fits = pd.read_csv(infile)
@@ -121,6 +121,19 @@ def which_fit2(infile, savepath):
     
     return fits
 
+def BIC_fit2(infile, num_obs, free_params, savepath):
+
+    fits = pd.read_csv(infile)
+    DOF = num_obs - free_params  # number of observed points - free parameters
+    chisq = fits['RedChiSq'] * DOF
+
+    BIC = chisq + free_params*np.log(num_obs)
+
+    fits['BIC'] = BIC
+
+    fits.to_csv('%sfits2_reordered.txt' % savepath, index=False)
+
+    return fits
 
 def SigToNoise(infile, infile_err, savepath, plot, og):
 
@@ -193,7 +206,7 @@ def SigToNoise(infile, infile_err, savepath, plot, og):
         ax.set_ylabel('Dec.', fontsize=20)
         bar = plt.colorbar(im, fraction=0.046)
         bar.ax.tick_params(width=2.5, labelsize=16, length=7, direction='in')
-        plt.savefig('%splots/fits2_SigToNoise.png' % savepath, dpi=200)
+        plt.savefig('%splots2/fits2_SigToNoise.png' % savepath, dpi=200)
 
     return
 
@@ -365,7 +378,7 @@ def assign_comps_mapps(og, infile, outflow, disk, line, criteria, savepath, plot
     bar.set_label('fwhm [km/s]', fontsize=18)
     bar.ax.tick_params(width=2.5, labelsize=16, length=7, direction='in')
 
-    plt.savefig('%splots/fits2_%s_%s.png' % (savepath, line, criteria), dpi=200)
+    plt.savefig('%splots2/fits2_%s_%s.png' % (savepath, line, criteria), dpi=200)
 
     return
 
@@ -685,7 +698,7 @@ def CHECK_Velocities2(og, infile, diskmap, assign_comps, savepath, plot=False, l
         bar.set_label('[N II]/H-alpha', fontsize=18)
         bar.ax.tick_params(width=2.5, labelsize=16, length=7, direction='in')
 
-        plt.savefig('%splots/fits2_NII_Halpha_VELOCITIES.png' % savepath, dpi=200)
+        plt.savefig('%splots2/fits2_NII_Halpha_VELOCITIES.png' % savepath, dpi=200)
 
         out = NIIb_out_amp / Halpha_out_amp
         print('Mean outflow:', np.mean(out[np.isfinite(out)]))
@@ -832,7 +845,7 @@ def assign_comps_mapps_ALL(og, infile, line, criteria, savepath):
     bar.set_label('fwhm', fontsize=18)
     bar.ax.tick_params(width=2.5, labelsize=16, length=7, direction='in')
 
-    plt.savefig('%splots/fits2_%s_%s.png' % (savepath, line, criteria), dpi=200)
+    plt.savefig('%splots2/fits2_%s_%s.png' % (savepath, line, criteria), dpi=200)
 
     return
 

@@ -100,7 +100,7 @@ plot_compare_crit = True
 line = 'Halpha'
 
 if check_fits == True:
-    which_fit2(infile='%sfits2_reordered.txt' % savepath, savepath=savepath)
+    physical_fit2(infile='%sfits2_reordered.txt' % savepath, savepath=savepath)
 
 if sig_to_noise == True:
     SigToNoise(infile='%sfits2_reordered.txt' % savepath, 
