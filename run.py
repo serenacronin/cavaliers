@@ -26,11 +26,11 @@ warnings.filterwarnings("ignore")
 # ============================================================================================================
 
 fit1 = False  # set to True when you want to run the one system of lines fit
-fit2 = True  # two systems of lines fit
-fit3 = False  # three systems of lines
+fit2 = False  # two systems of lines fit
+fit3 = True  # three systems of lines
 subcube = False  # do you want to work with a small region of the cube?
 
-savepath = '../ngc253/June21/'
+savepath = '../ngc253/Aug10/'
 save_fits_num = 100
 
 # ============================================================================================================ 
@@ -69,8 +69,8 @@ modelcube = fits.open(vel_model)  # open the velocity model for the disk
 modelcubedat = modelcube[0].data  # grab the data from the velocity model
 
 if subcube == True:
-    x1, x2 = 'X1 HERE', 'X2 HERE'
-    y1, y2 = 'Y1 HERE', 'Y2 HERE'
+    x1, x2 = 164, 166
+    y1, y2 = 359, 361
     vels = modelcubedat[x1:x2, y1:y2]  # slice the velocity model to focus on a subcube/subregion
 else:
 	vels = modelcubedat
@@ -180,9 +180,11 @@ if __name__ == '__main__':
     cube = CreateCube(filename, SlabLower, SlabUpper, ContLower1, ContUpper1, ContLower2, ContUpper2)
     if subcube == True:
          cube = cube[:,y1:y2, x1:x2]  # slicing is in the format of z, y, x
+
+    print(cube)
 	
     FittingInfo = InputParams(fit1, fit2, fit3, R, free_params, 
-                            continuum_limits=[ContLower1, ContUpper2], fluxnorm=fluxnorm,
+                            continuum_limits=[ContLower1, ContLower2, ContUpper1, ContUpper2], fluxnorm=fluxnorm,
                             amps1=amps1, centers1=wls1, ties1=ties1_per_pix,
                             amps2=amps2, centers2=wls2, ties2=ties2_per_pix,
                             amps3=amps3, centers3=wls3, ties3=ties3_per_pix,

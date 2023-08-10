@@ -96,12 +96,12 @@ def plotting(xpix, ypix, spec, redchisq, savepath, xmin, xmax, ymax, fluxnorm):
                             loc='upper left')
         
     # make a title
-    plt.title('Pixel: %s,%s' % (xpix,ypix))
+    plt.title('Pixel: %s,%s' % (164+xpix,359+ypix))
     
     # plt.xlabel(r'Wavelength $(\AA)$')
     
     # save the figure and suppress it from being printed to the terminal
-    plt.savefig('%s/pixel_%s_%s.png' % (savepath, xpix, ypix), 
+    plt.savefig('%s/pixel_%s_%s.png' % (savepath, 164+xpix,359+ypix), 
                 dpi=200)
     plt.close()
     return

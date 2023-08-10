@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from astropy.io import fits
 from tqdm import tqdm
 from matplotlib.offsetbox import AnchoredText
+import os
 
 import time
 startTime = time.time()  # time the script
@@ -24,11 +25,13 @@ plt.rcParams["font.weight"] = 'bold'
 
 R = 2989
 run_BIC = False
-visual_BIC = True
+visual_BIC = False
 dBIC_thresh = -50
 dBIC_vmin = -200
 dBIC_vmax = -10
-visual_BIC_phys = True
+comparison = True
+compare_difference = False
+compare_ratio = True
 
 def calc_BIC(infile, num_obs, free_params):
 
@@ -46,7 +49,6 @@ def calc_BIC(infile, num_obs, free_params):
 
 
 def physical_check(infile, i, j, fitnum):
-    print(i,j, end='\r')
     fits = pd.read_csv(infile)
     fits = fits[(fits['Y'] == i) & (fits['X'] == j)]
 
@@ -135,6 +137,12 @@ else:
     fits2 = pd.read_csv(infile2)
     fits3 = pd.read_csv(infile3)
 
+# get info of original data
+og = '../ngc253/data/ADP.2018-11-22T21_29_46.157.fits'
+hdu = fits.open(og)[1]
+og_data = hdu.data
+y, x = og_data[1].shape
+
 # =====================================================================
 # Compare the BICs visually
 # =====================================================================
@@ -142,16 +150,6 @@ else:
 if visual_BIC == True:
     print('Plotting the BIC values....')
     savepath = '../ngc253/June21/'
-    og = '../ngc253/data/ADP.2018-11-22T21_29_46.157.fits'
-
-    # print(np.mean(fits1['BIC']), np.median(fits1['BIC']), np.min(fits1['BIC']), np.max(fits1['BIC']))
-    # print(np.mean(fits2['BIC']), np.median(fits2['BIC']), np.min(fits2['BIC']), np.max(fits2['BIC']))
-    # print(np.mean(fits3['BIC']), np.median(fits3['BIC']), np.min(fits3['BIC']), np.max(fits3['BIC']))
-
-    # get info of original data
-    hdu = fits.open(og)[1]
-    og_data = hdu.data
-    y, x = og_data[1].shape
 
     # use the original data to create the dimensions of the maps
     BIC_map1 = np.empty((y,x))
@@ -267,74 +265,51 @@ if visual_BIC == True:
 
     plt.savefig('%sBIC_vs_RedChiSq_zoom.png' % savepath, dpi=200)
 
-    # now create a map based on comparison
-    BIC_map_total = np.empty((y,x))
-
-    for i in np.arange(y):
-        for j in np.arange(x):
-            BIC_1 = BIC_map1[i,j]
-            BIC_2 = BIC_map2[i,j]
-            BIC_3 = BIC_map3[i,j]
-            # print(BIC_1, BIC_2, BIC_3)
-
-            if (BIC_2 - BIC_1) < dBIC_thresh:  # if 2 is better than 1
-                if (BIC_3 - BIC_2) < dBIC_thresh:  # but 3 is better than 2
-                    BIC_map_total[i,j] = 3  # then 3 is the best!
-                else:
-                    BIC_map_total[i,j] = 2  # otherwise, 2 is the best!
-            elif (BIC_3 - BIC_1) < dBIC_thresh:  # or, if 3 is better than 1
-                if (BIC_2 - BIC_3) < dBIC_thresh:  # but 2 is better than 3
-                    BIC_map_total[i,j] = 2  # then 2 is the best!
-                else:
-                    BIC_map_total[i,j] = 3  # otherwise, 3 is the best!
-            else:
-                BIC_map_total[i,j] = 1  # OTHERWISE...1 wins!
-
-    # print(BIC_map1[268,262], BIC_map2[268,262], BIC_map3[268,262], BIC_map_total[268,262])
-
-    # blank out the edges
-    BIC_map_total[np.isnan(og_data[1])] = np.nan # [0] has some nans within
-
-    plt.figure(figsize=(7,7))
-    ax = plt.subplot(1, 1, 1)
-    im = ax.imshow(BIC_map_total, origin='lower', vmin=1, vmax=3, cmap='cool')
-    ax.set_title('BIC Comparison', fontsize=20)
-    bar = plt.colorbar(im, fraction=0.046)
-    bar.ax.tick_params(width=2.5, labelsize=16, length=7, direction='in')
-    ax.set_xticks([])
-    ax.set_yticks([])
-    # plt.show()
-    plt.close()
-
-
-if visual_BIC_phys == True:
+if comparison == True:
 
     savepath = '../ngc253/June21/'
-    og = '../ngc253/data/ADP.2018-11-22T21_29_46.157.fits'
-    
-    # get info of original data
-    hdu = fits.open(og)[1]
-    og_data = hdu.data
-    y, x = og_data[1].shape
 
-    # use the original data to create the dimensions of the maps
     BIC_map1 = np.empty((y,x))
     BIC_map2 = np.empty((y,x))
     BIC_map3 = np.empty((y,x))
     redchisq_map1 = np.empty((y,x))
     redchisq_map2 = np.empty((y,x))
     redchisq_map3 = np.empty((y,x))
+    vel_map1 = np.empty((y,x))
+    vel_map2_b = np.empty((y,x))
+    vel_map2_r = np.empty((y,x))
+    vel_map3_b = np.empty((y,x))
+    vel_map3_0 = np.empty((y,x))
+    vel_map3_r = np.empty((y,x))
+    fwhm_map1 = np.empty((y,x))
+    fwhm_map2_b = np.empty((y,x))
+    fwhm_map2_r = np.empty((y,x))
+    fwhm_map3_b = np.empty((y,x))
+    fwhm_map3_0 = np.empty((y,x))
+    fwhm_map3_r = np.empty((y,x))
 
-    # make maps of the BICs
+    # make maps of the BICs, velocities, and FWHMs
     for index, row in fits1.iterrows():
         redchisq_map1[int(row['Y']), int(row['X'])] = row['RedChiSq']
         BIC_map1[int(row['Y']), int(row['X'])] = row['BIC']
+        vel_map1[int(row['Y']), int(row['X'])] = row['Vel2']
+        fwhm_map1[int(row['Y']), int(row['X'])] = row['SigVel2']
     for index, row in fits2.iterrows():
         redchisq_map2[int(row['Y']), int(row['X'])] = row['RedChiSq']
         BIC_map2[int(row['Y']), int(row['X'])] = row['BIC']
+        vel_map2_b[int(row['Y']), int(row['X'])] = row['Vel3']
+        vel_map2_r[int(row['Y']), int(row['X'])] = row['Vel4']
+        fwhm_map2_b[int(row['Y']), int(row['X'])] = row['SigVel3']
+        fwhm_map2_r[int(row['Y']), int(row['X'])] = row['SigVel4']
     for index, row in fits3.iterrows():
         redchisq_map3[int(row['Y']), int(row['X'])] = row['RedChiSq']
         BIC_map3[int(row['Y']), int(row['X'])] = row['BIC']
+        vel_map3_b[int(row['Y']), int(row['X'])] = row['Vel4']
+        vel_map3_0[int(row['Y']), int(row['X'])] = row['Vel5']
+        vel_map3_r[int(row['Y']), int(row['X'])] = row['Vel6']
+        fwhm_map3_b[int(row['Y']), int(row['X'])] = row['SigVel4']
+        fwhm_map3_0[int(row['Y']), int(row['X'])] = row['SigVel5']
+        fwhm_map3_r[int(row['Y']), int(row['X'])] = row['SigVel6']
 
     # blank out edges
     BIC_map1[np.isnan(og_data[1])] = np.nan # [0] has some nans within
@@ -343,75 +318,74 @@ if visual_BIC_phys == True:
     redchisq_map1[np.isnan(og_data[1])] = np.nan # [0] has some nans within
     redchisq_map2[np.isnan(og_data[1])] = np.nan # [0] has some nans within
     redchisq_map3[np.isnan(og_data[1])] = np.nan # [0] has some nans within
+    vel_map1[np.isnan(og_data[1])] = np.nan # [0] has some nans within
+    vel_map2_b[np.isnan(og_data[1])] = np.nan # [0] has some nans within
+    vel_map2_r[np.isnan(og_data[1])] = np.nan # [0] has some nans within
+    vel_map3_b[np.isnan(og_data[1])] = np.nan # [0] has some nans within
+    vel_map3_0[np.isnan(og_data[1])] = np.nan # [0] has some nans within
+    vel_map3_r[np.isnan(og_data[1])] = np.nan # [0] has some nans within
+    fwhm_map1[np.isnan(og_data[1])] = np.nan # [0] has some nans within
+    fwhm_map2_b[np.isnan(og_data[1])] = np.nan # [0] has some nans within
+    fwhm_map2_r[np.isnan(og_data[1])] = np.nan # [0] has some nans within
+    fwhm_map3_b[np.isnan(og_data[1])] = np.nan # [0] has some nans within
+    fwhm_map3_0[np.isnan(og_data[1])] = np.nan # [0] has some nans within
+    fwhm_map3_r[np.isnan(og_data[1])] = np.nan # [0] has some nans within
 
-    # compare the BICs AND see if the fits are physical
-    BIC_map_total = np.empty((y,x))
-    for i in np.arange(y):
-        for j in np.arange(x):
-            BIC_1 = BIC_map1[i,j]
-            BIC_2 = BIC_map2[i,j]
-            BIC_3 = BIC_map3[i,j]
 
-            # FIXME: what if 2 is nan, but 1 and 3 aren't? or vice versa
-            if ((np.isfinite(BIC_1) == False) | (np.isfinite(BIC_2) == False) |
-                (np.isfinite(BIC_3) == False)):
-                BIC_map_total[i,j] = np.nan
-                continue
-            
-            elif (BIC_2 - BIC_1) < dBIC_thresh:  # if 2 is better than 1
-                if (BIC_3 - BIC_2) < dBIC_thresh:  # but 3 is better than 2
-                    # check physicality of 3
-                    result = physical_check(infile=infile3, i=i, j=j, fitnum=3)
-                    if result == 'PASS':  # if 3 is physical...
-                        BIC_map_total[i,j] = 3  # ...then 3 is the best!
-                    else:
-                        pass
-                else:
-                    # check physicality of 2
-                    result = physical_check(infile=infile2, i=i, j=j, fitnum=2)
-                    if result == 'PASS':  # if 2 is physical...
-                        BIC_map_total[i,j] = 2  # ...then 2 is the best!
-                    else:
-                        pass
-            elif (BIC_3 - BIC_1) < dBIC_thresh:  # if 3 is better than 1
-                if (BIC_2 - BIC_3) < dBIC_thresh:  # but 2 is better than 3
-                    # check physicality of 2
-                    result = physical_check(infile=infile2, i=i, j=j, fitnum=2)
-                    if result == 'PASS':
-                        BIC_map_total[i,j] = 2  # then 2 is the best!
-                    else:
-                        pass
-                else:
-                    # check the physicality of 3
-                    result = physical_check(infile=infile3, i=i, j=j, fitnum=3)
-                    if result == 'PASS':
-                        BIC_map_total[i,j] = 3  # then 3 is the best!
-                    else:
-                        pass
-            else:
-                # check the physicality of 1
-                result = physical_check(infile=infile1, i=i, j=j, fitnum=1)
-                if result == 'PASS':
-                    BIC_map_total[i,j] = 1  # OTHERWISE...1 wins!
-                else:
-                    BIC_map_total[i,j] = np.nan
+    # quick physical test based on velocity + fwhm
+    BIC_map1[(np.abs(vel_map1) > 600) | (np.abs(fwhm_map1) > 1000)] = 1e6  # set to some ridiculous number
+    BIC_map2[(np.abs(vel_map2_b) > 600) | (np.abs(fwhm_map2_b) > 1000)] = 1e6
+    BIC_map2[(np.abs(vel_map2_r) > 600) | (np.abs(fwhm_map2_r) > 1000)] = 1e6
+    BIC_map3[(np.abs(vel_map3_b) > 600) | (np.abs(fwhm_map3_b) > 1000)] = 1e6
+    BIC_map3[(np.abs(vel_map3_0) > 600) | (np.abs(fwhm_map3_0) > 1000)] = 1e6
+    BIC_map3[(np.abs(vel_map3_r) > 600) | (np.abs(fwhm_map1) > 1000)] = 1e6
 
-    # blank out the edges
-    BIC_map_total[np.isnan(og_data[1])] = np.nan # [0] has some nans within
+    if compare_difference == True:
+        # now actually compare the BICs
+        BIC_PHYS = np.full((y,x), 1.0)  # assume 1 is the best
+        BIC_PHYS[((BIC_map2 - BIC_map1) < dBIC_thresh)] = 2   # assume 2 is the second best
+        BIC_PHYS[((BIC_map3 - BIC_map2) < dBIC_thresh)] = 3   # assume 3 is the third best
+        BIC_PHYS[np.isnan(og_data[1])] = np.nan # [0] has some nans within
 
-    plt.figure(figsize=(7,7))
-    ax = plt.subplot(1, 1, 1)
-    im = ax.imshow(BIC_map_total, origin='lower', vmin=1, vmax=3, cmap='cool')
-    ax.set_title('BIC Comparison + Physical Test', fontsize=20)
-    bar = plt.colorbar(im, fraction=0.046)
-    bar.ax.tick_params(width=2.5, labelsize=16, length=7, direction='in')
-    ax.set_xticks([])
-    ax.set_yticks([])
-    plt.show()
-    plt.close()
+    #
+        plt.figure(figsize=(7,7))
+        ax = plt.subplot(1, 1, 1)
+        im = ax.imshow(BIC_PHYS, origin='lower', cmap='cool')
+        ax.set_title('BIC + Physical Test', fontsize=20)
 
-    outfile = open('which_model_time.txt', 'w')
-    executionTime = (time.time() - startTime)
-    print('Execution time in seconds: ' + str(executionTime))  # prints to the terminal
-    print('Execution time in seconds: ' + str(executionTime), file=outfile)  # prints to a file
-    outfile.close()
+        bar = plt.colorbar(im, fraction=0.046)
+        bar.ax.tick_params(width=2.5, labelsize=16, length=7, direction='in')
+        ax.set_xticks([])
+        ax.set_yticks([])
+        plt.savefig('%sBIC_PHYS_50.png' % savepath, dpi=200)
+        plt.close()
+
+        # save as a fits file
+        hdu = fits.PrimaryHDU(BIC_PHYS)
+        hdu.writeto('%sBIC_PHYS_50.fits' % savepath, overwrite=True)
+
+    elif compare_ratio == True:
+
+        # now actually compare the BICs
+        BIC_PHYS = np.full((y,x), 1.0)  # assume 1 is the best
+        BIC_PHYS[((BIC_map2 - BIC_map1) < dBIC_thresh)] = 2   # assume 2 is the second best
+        BIC_PHYS[((BIC_map3 - BIC_map2) < dBIC_thresh)] = 3   # assume 3 is the third best
+        BIC_PHYS[np.isnan(og_data[1])] = np.nan # [0] has some nans within
+
+    #
+        plt.figure(figsize=(7,7))
+        ax = plt.subplot(1, 1, 1)
+        im = ax.imshow(BIC_PHYS, origin='lower', cmap='cool')
+        ax.set_title('BIC + Physical Test', fontsize=20)
+
+        bar = plt.colorbar(im, fraction=0.046)
+        bar.ax.tick_params(width=2.5, labelsize=16, length=7, direction='in')
+        ax.set_xticks([])
+        ax.set_yticks([])
+        plt.savefig('%sBIC_PHYS_50.png' % savepath, dpi=200)
+        plt.close()
+
+        # save as a fits file
+        hdu = fits.PrimaryHDU(BIC_PHYS)
+        hdu.writeto('%sBIC_PHYS_50.fits' % savepath, overwrite=True)
+        
