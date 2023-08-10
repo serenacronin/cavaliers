@@ -760,7 +760,7 @@ def FitRoutine(FittingInfo, cube):
 			os.remove("%sfits1_err.txt" % savepath)
 
 		e1 = open("%sfits1_err.txt" % savepath, "w")
-		e1.write('X,Y,RedChiSq,')
+		e1.write('X,Y,RedChiSq,RedChiSqErr,')
 		e1.write('Amp1,Amp2,Amp3,Amp4,Amp5,')
 		e1.write('Wvl1,Wvl2,Wvl3,Wvl4,Wvl5,')
 		e1.write('Sig1,Sig2,Sig3,Sig4,Sig5\n')
@@ -781,7 +781,7 @@ def FitRoutine(FittingInfo, cube):
 			os.remove("%sfits2_err.txt" % savepath)
 
 		e2 = open("%sfits2_err.txt" % savepath, "w")
-		e2.write('X,Y,RedChiSq,')
+		e2.write('X,Y,RedChiSq,RedChiSqErr,')
 		e2.write('Amp1,Amp2,Amp3,Amp4,Amp5,Amp6,Amp7,Amp8,Amp9,Amp10,')
 		e2.write('Wvl1,Wvl2,Wvl3,Wvl4,Wvl5,Wvl6,Wvl7,Wvl8,Wvl9,Wvl10,')
 		e2.write('Sig1,Sig2,Sig3,Sig4,Sig5,Sig6,Sig7,Sig8,Sig9,Sig10\n')
@@ -802,7 +802,7 @@ def FitRoutine(FittingInfo, cube):
 			os.remove("%sfits3_err.txt" % savepath)
 
 		e3 = open("%sfits3_err.txt" % savepath, "w")
-		e3.write('X,Y,RedChiSq,')
+		e3.write('X,Y,RedChiSq,RedChiSqErr,')
 		e3.write('Amp1,Amp2,Amp3,Amp4,Amp5,Amp6,Amp7,Amp8,Amp9,Amp10,Amp11,Amp12,Amp13,Amp14,Amp15,')
 		e3.write('Wvl1,Wvl2,Wvl3,Wvl4,Wvl5,Wvl6,Wvl7,Wvl8,Wvl9,Wvl10,Wvl11,Wvl12,Wvl13,Wvl14,Wvl15,')
 		e3.write('Sig1,Sig2,Sig3,Sig4,Sig5,Sig6,Sig7,Sig8,Sig9,Sig10,Sig11,Sig12,Sig13,Sig14,Sig15\n')
@@ -931,8 +931,8 @@ def FitRoutine(FittingInfo, cube):
 				# save errors on parameters to file
 				with open("%sfits1_err.txt" % savepath, "a") as e1:
 					e1.write('%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,'
-	      					'%s, %s, %s, %s, %s\n' %
-							(i, j, redchisq1,
+	      					'%s, %s, %s, %s, %s, %s\n' %
+							(i, j, redchisq1, errs1,
 							err_params1[0], err_params1[3], err_params1[6], err_params1[9], err_params1[12],
 	     					err_params1[1], err_params1[4], err_params1[7], err_params1[10], err_params1[13],
 						    err_params1[2], err_params1[5], err_params1[8], err_params1[11], err_params1[14]))
@@ -1040,8 +1040,8 @@ def FitRoutine(FittingInfo, cube):
 				with open("%sfits2_err.txt" % savepath, "a") as e2:
 					e2.write('%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,'
 	      					'%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,'
-	      					'%s, %s, %s, %s, %s, %s, %s, %s, %s, %s\n' %
-							(i, j, redchisq2,
+	      					'%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s\n' %
+							(i, j, redchisq2, errs2,
 							err_params2[0], err_params2[3], err_params2[6], err_params2[9], err_params2[12],
 	     					err_params2[15], err_params2[18], err_params2[21], err_params2[24], err_params2[27],
 						    err_params2[1], err_params2[4], err_params2[7], err_params2[10], err_params2[13],
@@ -1158,8 +1158,8 @@ def FitRoutine(FittingInfo, cube):
 	      					'%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,'
 	      					'%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,'
 							 '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,'
-							'%s, %s, %s\n' %
-							(i, j, redchisq3,
+							'%s, %s, %s, %s\n' %
+							(i, j, redchisq3, errs3,
 							err_params3[0], err_params3[3], err_params3[6], err_params3[9], err_params3[12],
 	     					err_params3[15], err_params3[18], err_params3[21], err_params3[24], err_params3[27],
 						    err_params3[30], err_params3[33], err_params3[36], err_params3[39], err_params3[42],
