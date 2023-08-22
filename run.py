@@ -184,7 +184,7 @@ if __name__ == '__main__':
     print(cube)
 	
     FittingInfo = InputParams(fit1, fit2, fit3, R, free_params, 
-                            continuum_limits=[ContLower1, ContLower2, ContUpper1, ContUpper2], fluxnorm=fluxnorm,
+                            continuum_limits=[ContLower1, ContUpper2], fluxnorm=fluxnorm,
                             amps1=amps1, centers1=wls1, ties1=ties1_per_pix,
                             amps2=amps2, centers2=wls2, ties2=ties2_per_pix,
                             amps3=amps3, centers3=wls3, ties3=ties3_per_pix,

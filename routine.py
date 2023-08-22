@@ -441,7 +441,7 @@ def InputParams(fit1, fit2, fit3, R, free_params, continuum_limits, fluxnorm,
 			save_fits, savepath])
 
 
-def compute_rms(spec_axis, spec, ContLower1, ContLower2, ContUpper1, ContUpper2):
+def compute_rms(spec_axis, spectrum, ContLower, ContUpper):
 	
 	"""
 	Take in a spectrum, blank out the emission lines, and calculate the
@@ -466,20 +466,17 @@ def compute_rms(spec_axis, spec, ContLower1, ContLower2, ContUpper1, ContUpper2)
 	"""
 	
 	# blank out the emission lines to get the continuum
-	# cont_channels = np.where((spec_axis > ContUpper) |
-	# 				 (spec_axis < ContLower))
 	
-	good_channels = ((spec_axis < ContUpper1) |
-					 (spec_axis > ContLower1) |
-					 (spec_axis < ContUpper2) |
-					 (spec_axis > ContLower2))
-
-	return np.std(spec.specfit.residuals[good_channels])
+	cont_channels = np.where((spec_axis > ContUpper) |
+					 (spec_axis < ContLower))
+	
+	continuum_vals = spectrum[cont_channels]
 	
 	# calculate the root mean square of the continuum
 	# this will be our uncertainty
-	# rms = np.sqrt(np.mean(np.square(continuum_vals)))
-	# return rms
+	rms = np.sqrt(np.mean(np.square(continuum_vals)))
+	
+	return rms
 
 
 def component_order_check(params, fit2 = False, fit3 = False):
@@ -760,7 +757,7 @@ def FitRoutine(FittingInfo, cube):
 			os.remove("%sfits1_err.txt" % savepath)
 
 		e1 = open("%sfits1_err.txt" % savepath, "w")
-		e1.write('X,Y,RedChiSq,RedChiSqErr,')
+		e1.write('X,Y,RedChiSq,RedChiSqErr')
 		e1.write('Amp1,Amp2,Amp3,Amp4,Amp5,')
 		e1.write('Wvl1,Wvl2,Wvl3,Wvl4,Wvl5,')
 		e1.write('Sig1,Sig2,Sig3,Sig4,Sig5\n')
@@ -872,8 +869,7 @@ def FitRoutine(FittingInfo, cube):
 				spec1.measure(fluxnorm = fluxnorm)
 				
 				# get errors on the spectrum for the reduced chi square
-				errs1 = compute_rms(spec_axis, spec1, continuum_limits[0], 
-									continuum_limits[1], continuum_limits[2], continuum_limits[3])
+				errs1 = compute_rms(spec_axis, spec1, continuum_limits[0], continuum_limits[1])
 
 				# get fit params
 				amps1_list = []
@@ -976,8 +972,7 @@ def FitRoutine(FittingInfo, cube):
 				spec2.measure(fluxnorm = fluxnorm)
 				
 				# get errors for the reduced chi square
-				errs2 = compute_rms(spec_axis, spec2, continuum_limits[0], 
-									continuum_limits[1], continuum_limits[2], continuum_limits[3])
+				errs2 = compute_rms(spec_axis, spec2, continuum_limits[0], continuum_limits[1])
 				
 				# get the fit params
 				amps2_list = []
@@ -1087,8 +1082,7 @@ def FitRoutine(FittingInfo, cube):
 				spec3.measure(fluxnorm = fluxnorm)
 				
 				# get errors for the reduced chi square
-				errs3 = compute_rms(spec_axis, spec3, continuum_limits[0], 
-									continuum_limits[1], continuum_limits[2], continuum_limits[3])
+				errs3 = compute_rms(spec_axis, spec3, continuum_limits[0], continuum_limits[1])
 				
 				# get the fit params
 				amps3_list = []
