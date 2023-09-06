@@ -80,8 +80,8 @@ def physical_check(infile, i, j, fitnum):
 
         # are the velocities similar between components?
         # arbitrarily choosing less than 1/2 resolution
-        # elif (np.abs(float(fits['Wvl3']) - float(fits['Wvl4'])) < (6562.80 / R)/2):
-        #     return 'FAIL'
+        elif (np.abs(float(fits['Wvl3']) - float(fits['Wvl4'])) < (6562.80 / R)/2):
+            return 'FAIL'
 
         # are the velocities unphysical?
         # i.e., greater than ~600 km/s (absolute value)
@@ -100,9 +100,9 @@ def physical_check(infile, i, j, fitnum):
 
         # are the velocities similar between components?
         # arbitrarily choosing less than 1/2 resolution
-        # elif ((np.abs(float(fits['Wvl4']) - float(fits['Wvl5'])) < (6562.80 / R)/2) | (np.abs(float(fits['Wvl4']) - float(fits['Wvl6'])) < (6562.80 / R)/2) | 
-        #         (np.abs(float(fits['Wvl5']) - float(fits['Wvl6'])) < (6562.80 / R)/2)):
-        #     return 'FAIL'
+        elif ((np.abs(float(fits['Wvl4']) - float(fits['Wvl5'])) < (6562.80 / R)/2) | (np.abs(float(fits['Wvl4']) - float(fits['Wvl6'])) < (6562.80 / R)/2) | 
+                (np.abs(float(fits['Wvl5']) - float(fits['Wvl6'])) < (6562.80 / R)/2)):
+            return 'FAIL'
 
         # are the velocities unphysical?
         # i.e., greater than ~600 km/s (absolute value)
@@ -339,6 +339,11 @@ if comparison == True:
     BIC_map3[(np.abs(vel_map3_b) > 600) | (np.abs(fwhm_map3_b) > 1000)] = 1e6
     BIC_map3[(np.abs(vel_map3_0) > 600) | (np.abs(fwhm_map3_0) > 1000)] = 1e6
     BIC_map3[(np.abs(vel_map3_r) > 600) | (np.abs(fwhm_map1) > 1000)] = 1e6
+
+    # test on velocity separation
+    BIC_map2[np.abs(vel_map2_b - vel_map2_r) < (6562.80 / R)/2] = 1e6
+    BIC_map3[(np.abs(vel_map3_b - vel_map3_0) < (6562.80 / R)/2) | 
+             (np.abs(vel_map3_r - vel_map3_0) < (6562.80 / R)/2)] = 1e6
 
     if compare_difference == True:
         # now actually compare the BICs
