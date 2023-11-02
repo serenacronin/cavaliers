@@ -153,6 +153,7 @@ def CreateCube(filename, SlabLower, SlabUpper, ContLower1, ContUpper1,
 	med = masked_cube.median(axis=0)
 	med_cube = cube - med
 	cube_final = med_cube.spectral_slab(SlabLower*u.AA, SlabUpper*u.AA)
+
 	return cube_final
 
 
@@ -466,7 +467,6 @@ def compute_rms(spec_axis, spectrum, ContLower, ContUpper):
 	"""
 	
 	# blank out the emission lines to get the continuum
-	
 	cont_channels = np.where((spec_axis > ContUpper) |
 					 (spec_axis < ContLower))
 	
@@ -814,12 +814,19 @@ def FitRoutine(FittingInfo, cube):
 	_, y, x = cube.shape
 
 	# set up a progress bar and a count of the pixels
-	pbar = tqdm(total=x*y, desc='Running fitting routine...')
+	pbar = tqdm(total=(x-310)*(y-106), desc='Running fitting routine...')
 	count = 0
 
 	# loop over each pixel and run the fitting routine!
-	for i in np.arange(x): # x-axis 
-		for j in np.arange(y): # y-axis
+	for i in np.arange(310,x): # x-axis
+
+		for j in np.arange(106,y): # y-axis
+
+			# # FIXME: debugging why it craps out after this pixel
+			# if (i < 310) & (j < 106):
+			# 	pbar.update(1)  
+			# 	count+=1
+			# 	continue
 
 			spectrum = np.array(cube[:,j,i], dtype='float64')  # grab the spectrum
 						
@@ -869,7 +876,7 @@ def FitRoutine(FittingInfo, cube):
 				spec1.measure(fluxnorm = fluxnorm)
 				
 				# get errors on the spectrum for the reduced chi square
-				errs1 = compute_rms(spec_axis, spec1, continuum_limits[0], continuum_limits[1])
+				errs1 = compute_rms(spec_axis, spectrum, continuum_limits[0], continuum_limits[1])
 
 				# get fit params
 				amps1_list = []
@@ -952,6 +959,7 @@ def FitRoutine(FittingInfo, cube):
 										else limits2[q] 
 										for q in range(len(limits2))]
 				
+				
 				# if the model is nan, then we skip the pixel and update the progressbar and count
 				if np.isfinite(total_guesses2[1]) == False:
 					pbar.update(1)
@@ -961,6 +969,12 @@ def FitRoutine(FittingInfo, cube):
 				# grab the spectrum
 				spec2 = pyspeckit.Spectrum(data=spectrum, xarr=np.linspace(minval, maxval, 
 											len(spectrum)))
+				
+				# total_guesses2 = [24.3258, 6555.7482, 1.2063, 47.7393, 6553.1403, 1.0921, 
+				# 	  23.406, 6570.5165, 1.2063, 221.5397, 6567.9027, 1.0921, 
+				# 	  72.9773, 6591.1898, 1.2063, 143.2178, 6588.5678, 1.0921, 
+				# 	  38.967, 6724.3361, 1.2063, 73.3251, 6721.6612, 1.0921, 
+				# 	  50.6289, 6738.733, 1.2063, 52.7458, 6736.0523, 1.0921]
 
 				# perform the fit
 				spec2.specfit.multifit(fittype='gaussian',
@@ -970,9 +984,22 @@ def FitRoutine(FittingInfo, cube):
 										tied = ties2,
 										annotate = False)
 				spec2.measure(fluxnorm = fluxnorm)
-				
+
+				# hacky check if the fits even worked! if not, let's run with the answer of nearest neighbor
+				# this manifests as None types in the errors list
+				# for whatever reason idk
+				if spec2.specfit.parinfo.errors[0] == None:
+						total_guesses2 = params2  # params from previous fit! hopefully
+						spec2.specfit.multifit(fittype='gaussian',
+												guesses = total_guesses2, 
+												limits = total_limits2,
+												limited = limited2,
+												tied = ties2,
+												annotate = False)
+						spec2.measure(fluxnorm = fluxnorm)
+
 				# get errors for the reduced chi square
-				errs2 = compute_rms(spec_axis, spec2, continuum_limits[0], continuum_limits[1])
+				errs2 = compute_rms(spec_axis, spectrum, continuum_limits[0], continuum_limits[1])
 				
 				# get the fit params
 				amps2_list = []
@@ -1008,6 +1035,7 @@ def FitRoutine(FittingInfo, cube):
 
 				redchisq2 = round(red_chisq(chans_spec, chans_model2, err=errs2, 
 					free_params=free_params),4)
+				
 
 				# option to print out fits
 				if (save_fits != False) & (count % save_fits == 0):						
@@ -1082,7 +1110,7 @@ def FitRoutine(FittingInfo, cube):
 				spec3.measure(fluxnorm = fluxnorm)
 				
 				# get errors for the reduced chi square
-				errs3 = compute_rms(spec_axis, spec3, continuum_limits[0], continuum_limits[1])
+				errs3 = compute_rms(spec_axis, spectrum, continuum_limits[0], continuum_limits[1])
 				
 				# get the fit params
 				amps3_list = []
