@@ -316,8 +316,8 @@ def InputParams(fit1, fit2, fit3, R, free_params, continuum_limits, fluxnorm,
 
 	# do we want a fit where there is only one system of lines?
 	if fit1 == True:
-		centers1_arr = np.array(centers1)
-		widths1_arr = (centers1_arr/float(R))/2.355
+		centers1_arr = np.round(np.array(centers1),3)
+		widths1_arr = np.round((centers1_arr/float(R))/2.355,3)
 		widths1_lower_lim = np.median(widths1_arr[np.isfinite(widths1_arr)])
 		widths1_upper_lim  = widths1_lower_lim*5
 		widths1_guess = widths1_lower_lim*3
@@ -353,8 +353,8 @@ def InputParams(fit1, fit2, fit3, R, free_params, continuum_limits, fluxnorm,
 		
 		# have to do some extra finagling since part of the list
 		# is just a number, and the other part is a numpy array
-		centers2_arr = np.array(centers2)
-		widths2_arr = (centers2_arr/float(R))/2.355
+		centers2_arr = np.round(np.array(centers2),3)
+		widths2_arr = np.round((centers2_arr/float(R))/2.355,3)
 		widths2_lower_lim = [np.median(widths2_arr[i][np.isfinite(widths2_arr[i])])
 		        			for i in range(len(widths2_arr))
 							if type(widths2_arr[i]) == np.ndarray]
@@ -393,8 +393,8 @@ def InputParams(fit1, fit2, fit3, R, free_params, continuum_limits, fluxnorm,
 	# same steps as above
 	if fit3 == True:
 		
-		centers3_arr = np.array(centers3)
-		widths3_arr = (centers3_arr/float(R))/2.355
+		centers3_arr = np.round(np.array(centers3),3)
+		widths3_arr = np.round((centers3_arr/float(R))/2.355,3)
 		widths3_lower_lim = [np.median(widths3_arr[i][np.isfinite(widths3_arr[i])])
 		        			for i in range(len(widths3_arr))
 							if type(widths3_arr[i]) == np.ndarray]
@@ -757,7 +757,7 @@ def FitRoutine(FittingInfo, cube):
 			os.remove("%sfits1_err.txt" % savepath)
 
 		e1 = open("%sfits1_err.txt" % savepath, "w")
-		e1.write('X,Y,RedChiSq,RedChiSqErr')
+		e1.write('X,Y,RedChiSq,RedChiSqErr,')
 		e1.write('Amp1,Amp2,Amp3,Amp4,Amp5,')
 		e1.write('Wvl1,Wvl2,Wvl3,Wvl4,Wvl5,')
 		e1.write('Sig1,Sig2,Sig3,Sig4,Sig5\n')
@@ -814,13 +814,13 @@ def FitRoutine(FittingInfo, cube):
 	_, y, x = cube.shape
 
 	# set up a progress bar and a count of the pixels
-	pbar = tqdm(total=(x-310)*(y-106), desc='Running fitting routine...')
+	pbar = tqdm(total=(x)*(y), desc='Running fitting routine...')
 	count = 0
 
 	# loop over each pixel and run the fitting routine!
-	for i in np.arange(310,x): # x-axis
+	for i in np.arange(x): # x-axis
 
-		for j in np.arange(106,y): # y-axis
+		for j in np.arange(y): # y-axis
 
 			# # FIXME: debugging why it craps out after this pixel
 			# if (i < 310) & (j < 106):
@@ -883,12 +883,12 @@ def FitRoutine(FittingInfo, cube):
 				centers1_list = []
 				widths1_list = []
 				for line in spec1.measurements.lines.keys():
-					amps1_list.append(round(spec1.measurements.lines[line]['amp']/(fluxnorm), 4)) #TODO: GENERALIZE
-					centers1_list.append(round(spec1.measurements.lines[line]['pos'], 4))
-					widths1_list.append(round(spec1.measurements.lines[line]['fwhm']/2.355,4))
+					amps1_list.append(round(spec1.measurements.lines[line]['amp']/(fluxnorm), 3)) #TODO: GENERALIZE
+					centers1_list.append(round(spec1.measurements.lines[line]['pos'], 3))
+					widths1_list.append(round(spec1.measurements.lines[line]['fwhm']/2.355,3))
 
 				# grab the error on each parameter
-				err_params1 = [round(e,4) for e in spec1.specfit.parinfo.errors]
+				err_params1 = [round(e,3) for e in spec1.specfit.parinfo.errors]
 
 				# save the parameters to a list
 				params1 = [par for sublist in zip(amps1_list, centers1_list, widths1_list)
@@ -911,7 +911,7 @@ def FitRoutine(FittingInfo, cube):
 				chans_model1 = model1[chans_ind]
 
 				redchisq1 = round(red_chisq(chans_spec, chans_model1, err=errs1, 
-					free_params=free_params),4)
+					free_params=free_params),3)
 				
 				# option to print out fits
 				if (save_fits != False) & (count % save_fits == 0):						
@@ -989,7 +989,8 @@ def FitRoutine(FittingInfo, cube):
 				# this manifests as None types in the errors list
 				# for whatever reason idk
 				if spec2.specfit.parinfo.errors[0] == None:
-						total_guesses2 = params2  # params from previous fit! hopefully
+						total_guesses2 = params2  # params from previous fits
+
 						spec2.specfit.multifit(fittype='gaussian',
 												guesses = total_guesses2, 
 												limits = total_limits2,
@@ -1006,12 +1007,12 @@ def FitRoutine(FittingInfo, cube):
 				centers2_list = []
 				widths2_list = []
 				for line in spec2.measurements.lines.keys():
-					amps2_list.append(round(spec2.measurements.lines[line]['amp']/(fluxnorm),4))
-					centers2_list.append(round(spec2.measurements.lines[line]['pos'],4))
-					widths2_list.append(round(spec2.measurements.lines[line]['fwhm']/2.355,4))
+					amps2_list.append(round(spec2.measurements.lines[line]['amp']/(fluxnorm),3))
+					centers2_list.append(round(spec2.measurements.lines[line]['pos'],3))
+					widths2_list.append(round(spec2.measurements.lines[line]['fwhm']/2.355,3))
 
 				# grab the error on each parameter
-				err_params2 = [round(e,4) for e in spec2.specfit.parinfo.errors]
+				err_params2 = [round(e,3) for e in spec2.specfit.parinfo.errors]
 
 				# save all of the parameters to a list
 				params2 = [par for sublist in zip(amps2_list, centers2_list, widths2_list)
@@ -1034,7 +1035,7 @@ def FitRoutine(FittingInfo, cube):
 				chans_model2 = model2[chans_ind]
 
 				redchisq2 = round(red_chisq(chans_spec, chans_model2, err=errs2, 
-					free_params=free_params),4)
+					free_params=free_params),3)
 				
 
 				# option to print out fits
@@ -1117,12 +1118,12 @@ def FitRoutine(FittingInfo, cube):
 				centers3_list = []
 				widths3_list = []
 				for line in spec3.measurements.lines.keys():
-					amps3_list.append(round(spec3.measurements.lines[line]['amp']/(fluxnorm),4))
-					centers3_list.append(round(spec3.measurements.lines[line]['pos'],4))
-					widths3_list.append(round(spec3.measurements.lines[line]['fwhm']/2.355,4))
+					amps3_list.append(round(spec3.measurements.lines[line]['amp']/(fluxnorm),3))
+					centers3_list.append(round(spec3.measurements.lines[line]['pos'],3))
+					widths3_list.append(round(spec3.measurements.lines[line]['fwhm']/2.355,3))
 
 				# grab the error on each parameter
-				err_params3 = [round(e,4) for e in spec3.specfit.parinfo.errors]
+				err_params3 = [round(e,3) for e in spec3.specfit.parinfo.errors]
 
 				# save the parameters to a list
 				params3 = [par for sublist in zip(amps3_list, centers3_list, widths3_list)
@@ -1145,7 +1146,7 @@ def FitRoutine(FittingInfo, cube):
 				chans_model3 = model3[chans_ind]
 
 				redchisq3 = round(red_chisq(chans_spec, chans_model3, err=errs3, 
-					free_params=free_params),4)
+					free_params=free_params),3)
 				
 				# option to print out fits
 				if (save_fits != False) & (count % save_fits == 0):						
